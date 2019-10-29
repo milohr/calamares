@@ -40,6 +40,16 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
+      <widget class="QToolButton" name="toolButton">
+       <property name="text">
+        <string>...</string>
+       </property>
+       <property name="icon">
+        <iconset theme="help-about"/>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QLineEdit" name="textBoxFullName">
        <property name="minimumSize">
         <size>
@@ -126,6 +136,16 @@
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QToolButton" name="toolButton_2">
+       <property name="text">
+        <string>...</string>
+       </property>
+       <property name="icon">
+        <iconset theme="help-about"/>
+       </property>
+      </widget>
+     </item>
      <item>
       <widget class="QLineEdit" name="textBoxUsername">
        <property name="sizePolicy">
@@ -225,6 +245,16 @@
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_4">
+     <item>
+      <widget class="QToolButton" name="toolButton_3">
+       <property name="text">
+        <string>...</string>
+       </property>
+       <property name="icon">
+        <iconset theme="help-about"/>
+       </property>
+      </widget>
+     </item>
      <item>
       <widget class="QLineEdit" name="textBoxHostname">
        <property name="sizePolicy">
@@ -327,6 +357,16 @@
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <widget class="QToolButton" name="toolButton_4">
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset theme="help-about"/>
+       </property>
+      </widget>
+     </item>
      <item>
       <widget class="QLineEdit" name="textBoxUserPassword">
        <property name="sizePolicy">
@@ -497,6 +537,14 @@
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_5">
+     <item>
+      <widget class="QToolButton" name="helpTextBoxRootPassword">
+       <property name="icon">
+        <iconset theme="help-about">
+         <normaloff>.</normaloff>.</iconset>
+       </property>
+      </widget>
+     </item>
      <item>
       <widget class="QLineEdit" name="textBoxRootPassword">
        <property name="sizePolicy">

@@ -92,6 +92,7 @@ UsersPage::UsersPage( QWidget* parent )
         ui->labelRootPasswordError->setVisible( !checked );
         ui->textBoxRootPassword->setVisible( !checked );
         ui->textBoxVerifiedRootPassword->setVisible( !checked );
+        ui->helpTextBoxRootPassword->setVisible( !checked );
         checkReady( isReady() );
     } );
 
