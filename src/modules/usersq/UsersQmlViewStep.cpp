@@ -165,4 +165,21 @@ UsersQmlViewStep::setConfigurationMap( const QVariantMap& configurationMap )
     // Now it might be explicitly set to empty, which is ok
 
     Calamares::JobQueue::instance()->globalStorage()->insert( "userShell", shell );
+
+    using Action = SetHostNameJob::Action;
+
+    QString hostnameActionString = CalamaresUtils::getString( configurationMap, "setHostname" );
+    if ( hostnameActionString.isEmpty() )
+    {
+        hostnameActionString = QStringLiteral( "EtcFile" );
+    }
+    bool ok = false;
+    auto hostnameAction = hostnameActions().find( hostnameActionString, ok );
+    if ( !ok )
+    {
+        hostnameAction = Action::EtcHostname;
+    }
+
+    Action hostsfileAction = getBool( configurationMap, "writeHostsFile", true ) ? Action::WriteEtcHosts : Action::None;
+    m_actions = hostsfileAction | hostnameAction;
 }

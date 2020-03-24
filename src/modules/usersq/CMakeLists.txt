@@ -3,7 +3,7 @@ find_package( Crypt REQUIRED )
 
 # Add optional libraries here
 set( USER_EXTRA_LIB )
-set( _users ${CMAKE_CURRENT_SOURCE_DIR}/../usersq )
+set( _users ${CMAKE_CURRENT_SOURCE_DIR}/../users )
 
 include_directories( ${PROJECT_BINARY_DIR}/src/libcalamaresui ${CMAKE_CURRENT_SOURCE_DIR}/../../libcalamares ${_users} )
 
@@ -26,27 +26,17 @@ calamares_add_plugin( usersq
     TYPE viewmodule
     EXPORT_MACRO PLUGINDLLEXPORT_PRO
     SOURCES
-		Config.cpp
-        CreateUserJob.cpp
-        SetPasswordJob.cpp
+		${_users}/Config.cpp
+		${_users}/CreateUserJob.cpp
+        ${_users}/SetPasswordJob.cpp
         UsersQmlViewStep.cpp
-        SetHostNameJob.cpp
-        CheckPWQuality.cpp
+        ${_users}/SetHostNameJob.cpp
+        ${_users}/CheckPWQuality.cpp
     RESOURCES
-        users.qrc
+        ${_users}/users.qrc
     LINK_PRIVATE_LIBRARIES
         calamaresui
         ${CRYPT_LIBRARIES}
         ${USER_EXTRA_LIB}
     SHARED_LIB
 )
-
-add_executable( usersqmltest qmlmain.cpp Config.cpp UsersQmlViewStep.cpp CreateUserJob.cpp SetPasswordJob.cpp SetHostNameJob.cpp CheckPWQuality.cpp )
-target_link_libraries( usersqmltest PRIVATE calamaresui Qt5::Core Qt5::Network Qt5::DBus ${CRYPT_LIBRARIES} ${USER_EXTRA_LIB})
-set_target_properties( usersqmltest
-    PROPERTIES
-        ENABLE_EXPORTS TRUE
-        RUNTIME_OUTPUT_NAME usersqmltest
-)
-calamares_automoc( usersqmltest )
-calamares_autouic( usersqmltest )

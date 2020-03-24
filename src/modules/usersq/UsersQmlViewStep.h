@@ -21,6 +21,7 @@
 #define USERSQMLVIEWSTEP_H
 
 #include <QObject>
+#include "SetHostNameJob.h"
 
 #include <utils/PluginFactory.h>
 #include <viewpages/QmlViewStep.h>
@@ -62,6 +63,7 @@ private:
     QList< Calamares::job_ptr > m_jobs;
 
     QStringList m_defaultGroups;
+    SetHostNameJob::Actions m_actions;
 };
 
 CALAMARES_PLUGIN_FACTORY_DECLARATION( UsersQmlViewStepFactory )
