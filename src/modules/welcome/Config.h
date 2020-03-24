@@ -30,6 +30,7 @@ class RequirementsModel : public QAbstractListModel
     Q_OBJECT
     using QAbstractListModel::QAbstractListModel;
     Q_PROPERTY(bool satisfiedRequirements READ satisfiedRequirements NOTIFY satisfiedRequirementsChanged FINAL)
+
     Q_PROPERTY(bool satisfiedMandatory READ satisfiedMandatory NOTIFY satisfiedMandatoryChanged FINAL)
     Q_PROPERTY( QString warningMessage READ warningMessage NOTIFY warningMessageChanged FINAL )
 
@@ -56,17 +57,19 @@ public:
 
     const Calamares::RequirementEntry& getEntry(const int& index) const
     {
+
         if(index > count() ||  index < 0)
             return *(new Calamares::RequirementEntry());
 
-        return m_requierements.at(index);
+        return m_requirements.at(index);
+
     }
 
     void setRequirementsList( const Calamares::RequirementsList& requirements );
     int rowCount(const QModelIndex&) const override;
     int count() const
     {
-        return m_requierements.count();
+        return m_requirements.count();
     }
 
     QString warningMessage() const
@@ -82,7 +85,7 @@ protected:
     QHash<int, QByteArray> roleNames() const override;
 
 private:
-    Calamares::RequirementsList m_requierements;
+    Calamares::RequirementsList m_requirements;
     bool m_satisfiedRequirements = false;
     bool m_satisfiedMandatory = false;
 
@@ -119,7 +122,6 @@ public:
     Config( QObject* parent = nullptr );
     void setCountryCode( const QString &countryCode );
     void setLanguageIcon( const QString &languageIcon );
-
     RequirementsModel& requirementsModel () const;
 
     void setIsNextEnabled( const bool& isNextEnabled );
@@ -138,6 +140,9 @@ public:
 
     QString donateUrl() const;
     void setDonateUrl(const QString &url);
+
+    QString genericWelcomeMessage();
+
 
 public slots:
     CalamaresUtils::Locale::LabelModel* languagesModel() const;

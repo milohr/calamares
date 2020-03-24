@@ -27,7 +27,6 @@
 #include "utils/Logger.h"
 #include "utils/Retranslator.h"
 #include "widgets/FixedAspectRatioLabel.h"
-#include "Config.h"
 
 #include <QAbstractButton>
 #include <QDialog>
@@ -151,6 +150,7 @@ ResultsListDialog::retranslate()
     }
 }
 
+
 ResultsListWidget::ResultsListWidget( const RequirementsModel &model, QWidget* parent )
     : QWidget( parent )
     , m_model( model )
@@ -249,7 +249,43 @@ ResultsListWidget::retranslate()
         }
     }
 
-    m_explanation->setText( m_model.warningMessage());
+    // Check that all are satisfied (gives warnings if not) and
+    // all *mandatory* entries are satisfied (gives errors if not).
+
+    if ( !m_model.satisfiedRequirements() )
+    {
+        QString message;
+        const bool setup = Calamares::Settings::instance()->isSetupMode();
+        if ( !m_model.satisfiedMandatory() )
+        {
+            message = setup ? tr( "This computer does not satisfy the minimum "
+                                  "requirements for setting up %1.<br/>"
+                                  "Setup cannot continue. "
+                                  "<a href=\"#details\">Details...</a>" )
+                            : tr( "This computer does not satisfy the minimum "
+                                  "requirements for installing %1.<br/>"
+                                  "Installation cannot continue. "
+                                  "<a href=\"#details\">Details...</a>" );
+        }
+        else
+        {
+            message = setup ? tr( "This computer does not satisfy some of the "
+                                  "recommended requirements for setting up %1.<br/>"
+                                  "Setup can continue, but some features "
+                                  "might be disabled." )
+                            : tr( "This computer does not satisfy some of the "
+                                  "recommended requirements for installing %1.<br/>"
+                                  "Installation can continue, but some features "
+                                  "might be disabled." );
+        }
+        m_explanation->setText( message.arg( *Calamares::Branding::ShortVersionedName ) );
+    }
+    else
+    {
+        m_explanation->setText( tr( "This program will ask you some questions and "
+                                    "set up %2 on your computer." )
+                                    .arg( *Calamares::Branding::ProductName ) );
+    }
 }
 
 #include "utils/moc-warnings.h"
