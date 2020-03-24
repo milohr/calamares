@@ -34,8 +34,6 @@ UsersQmlViewStep::UsersQmlViewStep( QObject* parent )
 : Calamares::QmlViewStep( parent )
 , m_config( new Config(this) )
 {
-    this->setConfigurationMap(CalamaresUtils::yamlMapToVariant(YAML::LoadFile("src/modules/users.conf")).toMap());
-
     emit nextStatusChanged( true );
     connect( m_config, &Config::checkReady, this, &UsersQmlViewStep::nextStatusChanged );
 }
