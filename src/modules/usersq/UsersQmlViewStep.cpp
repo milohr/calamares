@@ -191,4 +191,7 @@ UsersQmlViewStep::setConfigurationMap( const QVariantMap& configurationMap )
 
     Action hostsfileAction = getBool( configurationMap, "writeHostsFile", true ) ? Action::WriteEtcHosts : Action::None;
     m_actions = hostsfileAction | hostnameAction;
+
+    Calamares::QmlViewStep::setConfigurationMap( configurationMap ); // call parent implementation last
+    setContextProperty( "Users", m_config );
 }
