@@ -20,15 +20,35 @@
 
 #include "UsersQmlViewStep.h"
 
-// #include "utils/CalamaresUtils.h"
+#include "SetHostNameJob.h"
+#include "SetPasswordJob.h"
+
 #include "utils/Logger.h"
+#include "utils/NamedEnum.h"
 #include "utils/Variant.h"
-#include "utils/Yaml.h"
 
 #include "GlobalStorage.h"
 #include "JobQueue.h"
 
 CALAMARES_PLUGIN_FACTORY_DEFINITION( UsersQmlViewStepFactory, registerPlugin< UsersQmlViewStep >(); )
+
+static const NamedEnumTable< SetHostNameJob::Action >&
+hostnameActions()
+{
+    using Action = SetHostNameJob::Action;
+
+    // *INDENT-OFF*
+    // clang-format off
+    static const NamedEnumTable< Action > names {
+        { QStringLiteral( "none" ), Action::None },
+        { QStringLiteral( "etcfile" ), Action::EtcHostname },
+        { QStringLiteral( "hostnamed" ), Action::SystemdHostname }
+    };
+    // clang-format on
+    // *INDENT-ON*
+
+    return names;
+}
 
 UsersQmlViewStep::UsersQmlViewStep( QObject* parent )
 : Calamares::QmlViewStep( parent )
@@ -98,6 +118,8 @@ UsersQmlViewStep::onLeave()
 void
 UsersQmlViewStep::setConfigurationMap( const QVariantMap& configurationMap )
 {
+    using CalamaresUtils::getBool;
+
     if ( configurationMap.contains( "defaultGroups" )
         && configurationMap.value( "defaultGroups" ).type() == QVariant::List )
     {
@@ -123,25 +145,12 @@ UsersQmlViewStep::setConfigurationMap( const QVariantMap& configurationMap )
                                                                   configurationMap.value( "sudoersGroup" ).toString() );
     }
 
-    if ( configurationMap.contains( "setRootPassword" )
-        && configurationMap.value( "setRootPassword" ).type() == QVariant::Bool )
-    {
-        Calamares::JobQueue::instance()->globalStorage()->insert(
-            "setRootPassword", configurationMap.value( "setRootPassword" ).toBool() );
-        m_config->setWriteRootPassword( configurationMap.value( "setRootPassword" ).toBool() );
-    }
+    bool setRootPassword = getBool( configurationMap, "setRootPassword", true );
+    Calamares::JobQueue::instance()->globalStorage()->insert( "setRootPassword", setRootPassword );
 
-    if ( configurationMap.contains( "doAutologin" )
-        && configurationMap.value( "doAutologin" ).type() == QVariant::Bool )
-    {
-        m_config->setAutologinDefault( configurationMap.value( "doAutologin" ).toBool() );
-    }
-
-    if ( configurationMap.contains( "doReusePassword" )
-        && configurationMap.value( "doReusePassword" ).type() == QVariant::Bool )
-    {
-        m_config->setReusePasswordDefault( configurationMap.value( "doReusePassword" ).toBool() );
-    }
+    m_config->setWriteRootPassword( setRootPassword );
+    m_config->setAutologinDefault( getBool( configurationMap, "doAutologin", false ) );
+    m_config->setReusePasswordDefault( getBool( configurationMap, "doReusePassword", false ) );
 
     if ( configurationMap.contains( "passwordRequirements" )
         && configurationMap.value( "passwordRequirements" ).type() == QVariant::Map )
@@ -154,8 +163,8 @@ UsersQmlViewStep::setConfigurationMap( const QVariantMap& configurationMap )
         }
     }
 
-    m_config->setPasswordCheckboxVisible( CalamaresUtils::getBool( configurationMap, "allowWeakPasswords", false ) );
-    m_config->setValidatePasswordDefault( !CalamaresUtils::getBool( configurationMap, "allowWeakPasswordsDefault", false) );
+    m_config->setPasswordCheckboxVisible( getBool( configurationMap, "allowWeakPasswords", false ) );
+    m_config->setValidatePasswordDefault( !getBool( configurationMap, "allowWeakPasswordsDefault", false ) );
 
     QString shell( QLatin1String( "/bin/bash" ) );  // as if it's not set at all
     if ( configurationMap.contains( "userShell" ) )

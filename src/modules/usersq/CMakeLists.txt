@@ -1,4 +1,4 @@
-find_package( Qt5 COMPONENTS Core REQUIRED )
+find_package( Qt5 ${QT_VERSION} CONFIG REQUIRED Core DBus Network )
 find_package( Crypt REQUIRED )
 
 # Add optional libraries here
@@ -6,7 +6,6 @@ set( USER_EXTRA_LIB )
 set( _users ${CMAKE_CURRENT_SOURCE_DIR}/../users )
 
 include_directories( ${PROJECT_BINARY_DIR}/src/libcalamaresui ${CMAKE_CURRENT_SOURCE_DIR}/../../libcalamares ${_users} )
-
 
 find_package( LibPWQuality )
 set_package_properties(
@@ -19,8 +18,6 @@ if( LibPWQuality_FOUND )
     include_directories( ${LibPWQuality_INCLUDE_DIRS} )
     add_definitions( -DCHECK_PWQUALITY -DHAVE_LIBPWQUALITY )
 endif()
-
-include_directories( ${PROJECT_BINARY_DIR}/src/libcalamaresui )
 
 calamares_add_plugin( usersq
     TYPE viewmodule
@@ -38,5 +35,6 @@ calamares_add_plugin( usersq
         calamaresui
         ${CRYPT_LIBRARIES}
         ${USER_EXTRA_LIB}
+        Qt5::DBus
     SHARED_LIB
 )

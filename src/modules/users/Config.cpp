@@ -145,33 +145,12 @@ Config::createJobs( const QStringList& defaultGroupsList )
                            defaultGroupsList );
     list.append( Calamares::job_ptr( j ) );
 
-    j = new SetPasswordJob( m_userName, m_userPassword );
-    list.append( Calamares::job_ptr( j ) );
-
     if ( m_writeRootPassword )
     {
-        gs->insert( "reuseRootPassword", m_reusePassword );
-        if ( m_reusePassword )
-        {
-            j = new SetPasswordJob( "root", m_userPassword );
-        }
-        else
-        {
-            j = new SetPasswordJob( "root", m_rootPassword );
-        }
-        list.append( Calamares::job_ptr( j ) );
-    }
-    else
-    {
-        j = new SetPasswordJob( "root",
-                                "" );  //explicitly disable root password
-        list.append( Calamares::job_ptr( j ) );
+        gs->insert( "reuseRootPassword",m_reusePassword );
     }
 
-    j = new SetHostNameJob( m_hostName );
-    list.append( Calamares::job_ptr( j ) );
-
-    gs->insert( "hostname",m_hostName );
+    gs->insert( "hostname", m_hostName );
     if ( m_autologin )
     {
         gs->insert( "autologinUser", m_userName );
