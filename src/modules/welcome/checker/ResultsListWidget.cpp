@@ -252,4 +252,6 @@ ResultsListWidget::retranslate()
     m_explanation->setText( m_model.warningMessage());
 }
 
+#include "utils/moc-warnings.h"
+
 #include "ResultsListWidget.moc"
