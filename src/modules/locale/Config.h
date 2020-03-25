@@ -1,6 +1,10 @@
 /* === This file is part of Calamares - <https://github.com/calamares> ===
  *
  *   Copyright 2019-2020, Adriaan de Groot <groot@kde.org>
+<<<<<<< HEAD
+=======
+ *   Copyright 2020, Camilo Higuita <milo.h@aol.com>
+>>>>>>> 215bc46469cb2a97e6e602a2ba2a9a0d0337be53
  *
  *   Calamares is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -19,21 +23,23 @@
 #ifndef LOCALE_CONFIG_H
 #define LOCALE_CONFIG_H
 
-#include <QObject>
-#include <QUrl>
-#include <QAbstractListModel>
-#include "Job.h"
-#include "locale/TimeZone.h"
 #include "LocaleConfiguration.h"
 #include "timezonewidget/localeglobal.h"
+
+#include "Job.h"
+#include "locale/TimeZone.h"
+
+#include <QAbstractListModel>
+#include <QObject>
+
 #include <memory>
 
 class Config : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(CalamaresUtils::Locale::CStringListModel * zonesModel READ zonesModel CONSTANT FINAL)
-    Q_PROPERTY(CalamaresUtils::Locale::CStringListModel * regionModel READ regionModel CONSTANT FINAL)
-    Q_PROPERTY(QString prettyStatus READ prettyStatus NOTIFY prettyStatusChanged FINAL)
+    Q_PROPERTY( CalamaresUtils::Locale::CStringListModel* zonesModel READ zonesModel CONSTANT FINAL )
+    Q_PROPERTY( CalamaresUtils::Locale::CStringListModel* regionModel READ regionModel CONSTANT FINAL )
+    Q_PROPERTY( QString prettyStatus READ prettyStatus NOTIFY prettyStatusChanged FINAL )
 
 public:
     Config( QObject* parent = nullptr );
@@ -41,7 +47,7 @@ public:
     CalamaresUtils::Locale::CStringListModel* regionModel() const;
     CalamaresUtils::Locale::CStringListModel* zonesModel() const;
 
-    void setLocaleInfo(const QString& initialRegion, const QString& initialZone, const QString& localeGenPath);
+    void setLocaleInfo( const QString& initialRegion, const QString& initialZone, const QString& localeGenPath );
 
     Calamares::JobList createJobs();
     QMap< QString, QString > localesMap();
@@ -49,8 +55,8 @@ public:
 
 private:
     CalamaresUtils::Locale::CStringPairList m_regionList;
-    CalamaresUtils::Locale::CStringListModel * m_regionModel;
-    CalamaresUtils::Locale::CStringListModel * m_zonesModel;
+    CalamaresUtils::Locale::CStringListModel* m_regionModel;
+    CalamaresUtils::Locale::CStringListModel* m_zonesModel;
 
     LocaleConfiguration m_selectedLocaleConfiguration;
 

@@ -141,11 +141,11 @@ protected:
 class CStringListModel : public QAbstractListModel
 {
     Q_OBJECT
-    Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged)
+    Q_PROPERTY( int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged )
 
 public:
     /// @brief Create empty model
-    CStringListModel() {};
+    CStringListModel() {}
     /// @brief Create model from list (non-owning)
     CStringListModel( CStringPairList );
 
@@ -154,24 +154,29 @@ public:
     QVariant data( const QModelIndex& index, int role ) const override;
 
     const CStringPair* item( int index ) const;
-    QHash<int, QByteArray> roleNames() const override;
+    QHash< int, QByteArray > roleNames() const override;
 
-    void setCurrentIndex(const int &index);
+    void setCurrentIndex( int index );
     int currentIndex() const;
 
-    void setList(CStringPairList);
+    void setList( CStringPairList );
 
-    inline int indexOf(const QString &key)
+    inline int indexOf( const QString& key )
     {
-        const auto it = std::find_if(m_list.constBegin(), m_list.constEnd(), [&](const  CalamaresUtils::Locale::CStringPair *item) -> bool
+        const auto it = std::find_if(
+            m_list.constBegin(), m_list.constEnd(), [&]( const CalamaresUtils::Locale::CStringPair* item ) -> bool {
+                return item->key() == key;
+            } );
+
+        if ( it != m_list.constEnd() )
         {
-            return item->key() == key;
-
-        });
-
-        if(it != m_list.constEnd())
-            return std::distance(m_list.constBegin(), it);
-        else return -1;
+            // distance() is usually a long long
+            return int( std::distance( m_list.constBegin(), it ) );
+        }
+        else
+        {
+            return -1;
+        }
     }
 
 
