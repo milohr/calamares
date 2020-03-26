@@ -20,19 +20,18 @@
 #ifndef KEYBOARDQMLVIEWSTEP_H
 #define KEYBOARDQMLVIEWSTEP_H
 
-#include <QObject>
 #include "Config.h"
+
+#include <DllMacro.h>
 #include <utils/PluginFactory.h>
 #include <viewpages/QmlViewStep.h>
 
-#include <DllMacro.h>
-#include <QQmlParserStatus>
+#include <QObject>
 
 class KeyboardPage;
 
-class PLUGINDLLEXPORT KeyboardQmlViewStep : public Calamares::QmlViewStep, public QQmlParserStatus
+class PLUGINDLLEXPORT KeyboardQmlViewStep : public Calamares::QmlViewStep
 {
-    Q_INTERFACES(QQmlParserStatus)
     Q_OBJECT
 
 public:
@@ -41,16 +40,13 @@ public:
     QString prettyName() const override;
     QString prettyStatus() const override;
 
-    void classBegin() override;
-    void componentComplete() override;
-
     bool isNextEnabled() const override;
     bool isBackEnabled() const override;
 
     bool isAtBeginning() const override;
     bool isAtEnd() const override;
 
-    QList< Calamares::job_ptr > jobs() const override;
+    Calamares::JobList jobs() const override;
 
     void onActivate() override;
     void onLeave() override;
@@ -59,7 +55,7 @@ public:
     QObject* getConfig() override;
 
 private:
-    Config * m_config;
+    Config* m_config;
     bool m_nextEnabled;
     QString m_prettyStatus;
 
@@ -67,9 +63,9 @@ private:
     QString m_convertedKeymapPath;
     bool m_writeEtcDefaultKeyboard;
 
-    QList< Calamares::job_ptr > m_jobs;
+    Calamares::JobList m_jobs;
 };
 
 CALAMARES_PLUGIN_FACTORY_DECLARATION( KeyboardQmlViewStepFactory )
 
-#endif // KEYBOARDQMLVIEWSTEP_H
+#endif  // KEYBOARDQMLVIEWSTEP_H
