@@ -264,6 +264,7 @@ Config::updateLocaleLabels()
 }
 
 std::pair< QString, QString >
+Config::prettyLocaleStatus( const LocaleConfiguration& lc ) const
 {
     using CalamaresUtils::Locale::Label;
 
@@ -272,7 +273,7 @@ std::pair< QString, QString >
 
     return std::make_pair< QString, QString >(
         tr( "The system language will be set to %1." ).arg( lang.label() ),
-        tr( "The numbers and dates locale will be set to %1." ).arg( num.label() ) );
+                                              tr( "The numbers and dates locale will be set to %1." ).arg( num.label() ) );
 }
 
 Calamares::JobList

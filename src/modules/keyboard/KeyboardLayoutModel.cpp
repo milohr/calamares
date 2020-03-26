@@ -108,25 +108,3 @@ KeyboardLayoutModel::currentIndex() const
 {
     return m_currentIndex;
 }
-
-QHash<int, QByteArray>
-KeyboardLayoutModel::roleNames() const
-{
-    return {{Qt::DisplayRole, "label"}, {KeyboardLayoutKeyRole, "key"}, {KeyboardVariantsRole, "variants"}};
-}
-
-void
-KeyboardLayoutModel::setCurrentIndex(const int &index)
-{
-    if(index >= m_layouts.count() || index < 0)
-        return;
-
-    m_currentIndex = index;
-    emit currentIndexChanged(m_currentIndex);
-}
-
-int
-KeyboardLayoutModel::currentIndex() const
-{
-    return m_currentIndex;
-}
