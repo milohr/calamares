@@ -193,5 +193,4 @@ UsersQmlViewStep::setConfigurationMap( const QVariantMap& configurationMap )
     m_actions = hostsfileAction | hostnameAction;
 
     Calamares::QmlViewStep::setConfigurationMap( configurationMap ); // call parent implementation last
-    setContextProperty( "Users", m_config );
 }

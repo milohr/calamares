@@ -193,7 +193,6 @@ WelcomeQmlViewStep::setConfigurationMap( const QVariantMap& configurationMap )
 	}
 
     Calamares::QmlViewStep::setConfigurationMap( configurationMap ); // call parent implementation last
-    setContextProperty( "Welcome", m_config );
 }
 
 Calamares::RequirementsList
