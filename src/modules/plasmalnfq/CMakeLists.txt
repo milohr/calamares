@@ -4,7 +4,7 @@ find_package(ECM ${ECM_VERSION} REQUIRED NO_MODULE)
 # needs a runtime support component (which we don't test for).
 set( lnf_ver 5.41 )
 
-set( _plasmalnf ${CMAKE_CURRENT_SOURCE_DIR}/../plasmalnfq )
+set( _plasmalnf ${CMAKE_CURRENT_SOURCE_DIR}/../plasmalnf )
 
 include_directories( ${PROJECT_BINARY_DIR}/src/libcalamaresui ${CMAKE_CURRENT_SOURCE_DIR}/../../libcalamares ${_plasmalnf} )
 
@@ -32,34 +32,15 @@ if ( KF5Plasma_FOUND AND KF5Package_FOUND )
             ${option_defs}
         SOURCES
             PlasmaQmlLnfViewStep.cpp
-            Config.cpp
-            PlasmaLnfJob.cpp
-            ThemeWidget.cpp
-        RESOURCES
-            page_plasmalnf.qrc
+            ${_plasmalnf}/Config.cpp
+            ${_plasmalnf}/PlasmaLnfJob.cpp
         LINK_PRIVATE_LIBRARIES
             calamaresui
             KF5::Package
             KF5::Plasma
-KF5::ConfigCore
+            KF5::ConfigCore
         SHARED_LIB
     )
-
-    add_executable( plasmalnfqtest qmlmain.cpp Config.cpp PlasmaQmlLnfViewStep.cpp Config.cpp PlasmaLnfJob.cpp )
-    target_link_libraries( plasmalnfqtest PRIVATE calamaresui Qt5::Core Qt5::Network Qt5::DBus KF5::Package KF5::Plasma KF5::ConfigCore)
-
-        if ( KF5Config_FOUND )
-        target_compile_definitions(plasmalnfqtest PRIVATE WITH_KCONFIG)
-    endif()
-
-    set_target_properties( plasmalnfqtest
-        PROPERTIES
-            ENABLE_EXPORTS TRUE
-            RUNTIME_OUTPUT_NAME plasmalnfqtest
-    )
-    calamares_automoc( plasmalnfqtest )
-    calamares_autouic( plasmalnfqtest )
-
 
 else()
     calamares_skip_module( "plasmalnfq (missing requirements)" )

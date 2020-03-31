@@ -38,8 +38,6 @@ public:
 
     QString prettyName() const override;
 
-    QWidget* widget() override;
-
     bool isNextEnabled() const override;
     bool isBackEnabled() const override;
 
@@ -57,7 +55,6 @@ public slots:
     void themeSelected( const QString& id );
 
 private:
-    QWidget* m_widget;
     Config * m_config;
     QString m_lnfPath;  // Path to the lnf tool
     QString m_themeId;  // Id of selected theme

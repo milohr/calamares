@@ -49,7 +49,6 @@ currentPlasmaTheme()
 
 PlasmaQmlLnfViewStep::PlasmaQmlLnfViewStep( QObject* parent )
     : Calamares::QmlViewStep( parent )
-    , m_widget( nullptr)
     , m_config( new Config(this) )
 {
     connect( m_config, &Config::plasmaThemeSelected, this, &PlasmaQmlLnfViewStep::themeSelected );
@@ -68,27 +67,17 @@ PlasmaQmlLnfViewStep::prettyName() const
     return tr( "Look-and-Feel" );
 }
 
-
-QWidget*
-PlasmaQmlLnfViewStep::widget()
-{
-    return m_widget;
-}
-
-
 bool
 PlasmaQmlLnfViewStep::isNextEnabled() const
 {
     return true;
 }
 
-
 bool
 PlasmaQmlLnfViewStep::isBackEnabled() const
 {
     return true;
 }
-
 
 bool
 PlasmaQmlLnfViewStep::isAtBeginning() const
@@ -168,6 +157,8 @@ PlasmaQmlLnfViewStep::setConfigurationMap( const QVariantMap& configurationMap )
     }
     else
         m_config->setEnabledThemesAll();  // All of them
+
+        Calamares::QmlViewStep::setConfigurationMap( configurationMap ); // call parent implementation last
 }
 
 void
