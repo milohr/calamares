@@ -1,10 +1,7 @@
 /* === This file is part of Calamares - <https://github.com/calamares> ===
  *
  *   Copyright 2014-2015, Teo Mrnjavac <teo@kde.org>
-<<<<<<< HEAD
-=======
  *   Copyright 2020, Camilo Higuita <milo.h@aol.com>
->>>>>>> 0581a06de1bbca4c2a4f0c87476d85446530acca
  *
  *   Calamares is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -91,7 +88,6 @@ void
 KeyboardQmlViewStep::onLeave()
 {
     m_config->finalize();
-
     m_jobs = m_config->createJobs( m_xOrgConfFileName, m_convertedKeymapPath, m_writeEtcDefaultKeyboard );
     m_prettyStatus = m_config->prettyStatus();
 }
