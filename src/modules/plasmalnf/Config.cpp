@@ -38,7 +38,7 @@ ThemeInfo::ThemeInfo( const KPluginMetaData& data )
 {
     QDir dir(data.fileName());
     dir.cdUp();
-    previewImage = QUrl::fromLocalFile(dir.absolutePath() + "/contents/previews/preview.png").toString();
+//     previewImage = QUrl::fromLocalFile(dir.absolutePath() + "/contents/previews/preview.png").toString();
 }
 
 static ThemeInfoList plasma_themes()
