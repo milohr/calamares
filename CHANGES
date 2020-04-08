@@ -3,10 +3,11 @@ contributors are listed. Note that Calamares does not have a historical
 changelog -- this log starts with version 3.2.0. The release notes on the
 website will have to do for older versions.
 
-# 3.2.22 (unreleased) #
+# 3.2.22 (2020-04-08) #
 
 This release contains contributions from (alphabetically by first name):
  - Anke Boersma
+ - Camilo Higuita
 
 ## Core ##
  - Both the sidebar (on the left) and the navigation buttons (along the
@@ -23,6 +24,13 @@ This release contains contributions from (alphabetically by first name):
 ## Modules ##
  - The *welcomeq* module has been improved with better layout and
    nicer buttons in the example QML form. (Thanks to Anke Boersma)
+ - The *keyboardq* and *localeq* modules now provide some QML for
+   configuring these parts, although they are still very primitive.
+ - *netinstall* has had some minor layout fixes.
+ - *unpackfs* has much more detailed progress reporting and no
+   longer jumps around strangely in overall progress.
+ - *partition* now correctly marks a partition as bootable in BIOS + MBR
+   installs. #1175
 
 
 # 3.2.21 (2020-03-27) #
