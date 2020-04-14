@@ -19,7 +19,7 @@
 #include "TimeZoneImage.h"
 
 #include "utils/Logger.h"
-
+#include <cmath>
 #include <QDir>
 
 static const char* zoneNames[]
