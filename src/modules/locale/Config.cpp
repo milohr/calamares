@@ -37,6 +37,7 @@
 #include "utils/Retranslator.h"
 
 #include <QDebug>
+#include <QFile>
 #include <QProcess>
 
 Config::Config( QObject* parent )
