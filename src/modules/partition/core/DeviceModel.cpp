@@ -57,6 +57,7 @@ DeviceModel::init( const DeviceList& devices )
     beginResetModel();
     m_devices = devices;
     sortDevices( m_devices );
+    emit countChanged();
     endResetModel();
 }
 
@@ -64,6 +65,16 @@ int
 DeviceModel::rowCount( const QModelIndex& parent ) const
 {
     return parent.isValid() ? 0 : m_devices.count();
+}
+
+QHash< int, QByteArray >
+DeviceModel::roleNames() const
+{
+    return  { { Roles::Display, "display" },
+    { Roles::Display, "display" },
+    { Roles::ToolTip, "tooltip" },
+    { Roles::Name, "name" },
+    { Roles::Size, "size" } };
 }
 
 QVariant
@@ -79,8 +90,8 @@ DeviceModel::data( const QModelIndex& index, int role ) const
 
     switch ( role )
     {
-    case Qt::DisplayRole:
-    case Qt::ToolTipRole:
+        case Roles::Display:
+        case Roles::ToolTip:
         if ( device->name().isEmpty() )
         {
             return device->deviceNode();
@@ -104,13 +115,34 @@ DeviceModel::data( const QModelIndex& index, int role ) const
                 return tr( "%1 - (%2)" ).arg( device->name() ).arg( device->deviceNode() );
             }
         }
-    case Qt::DecorationRole:
-        return CalamaresUtils::defaultPixmap(
-            CalamaresUtils::PartitionDisk,
-            CalamaresUtils::Original,
-            QSize( CalamaresUtils::defaultIconSize().width() * 3, CalamaresUtils::defaultIconSize().height() * 3 ) );
-    default:
-        return QVariant();
+        case Roles::Name:
+            if ( device->name().isEmpty() )
+            {
+                return device->deviceNode();
+            }else
+            {
+                return  device->name();
+            }
+        case Roles::Size:
+            if ( device->logicalSize() >= 0 && device->totalLogical() >= 0 )
+            {
+                //: device[name] - size[number] (device-node[name])
+                return tr( "%1 - %2 (%3)" )
+                .arg( device->name() )
+                .arg( KFormat().formatByteSize( device->capacity() ) )
+                .arg( device->deviceNode() );
+            }
+            else
+            {
+                return "?";
+            }
+        case Qt::DecorationRole:
+            return CalamaresUtils::defaultPixmap(
+                CalamaresUtils::PartitionDisk,
+                CalamaresUtils::Original,
+                QSize( CalamaresUtils::defaultIconSize().width() * 3, CalamaresUtils::defaultIconSize().height() * 3 ) );
+        default:
+            return QVariant();
     }
 }
 
@@ -150,6 +182,7 @@ DeviceModel::addDevice( Device* device )
     beginResetModel();
     m_devices << device;
     sortDevices( m_devices );
+    emit countChanged();
     endResetModel();
 }
 
@@ -159,5 +192,6 @@ DeviceModel::removeDevice( Device* device )
     beginResetModel();
     m_devices.removeAll( device );
     sortDevices( m_devices );
+    emit countChanged();
     endResetModel();
 }

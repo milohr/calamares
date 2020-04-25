@@ -67,7 +67,8 @@ UsersQmlViewStep::prettyName() const
 bool
 UsersQmlViewStep::isNextEnabled() const
 {
-    return m_config->isReady();
+//     return m_config->isReady();
+    return true;
 }
 
 

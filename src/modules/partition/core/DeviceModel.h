@@ -32,7 +32,18 @@ class PartitionModel;
 class DeviceModel : public QAbstractListModel
 {
     Q_OBJECT
+    Q_PROPERTY(int count READ rowCount NOTIFY countChanged FINAL)
+    Q_PROPERTY(QString test MEMBER m_test )
+
 public:
+    enum Roles
+    {
+        Display = Qt::DisplayRole,
+        ToolTip = Qt::ToolTipRole,
+        Name = Qt::ToolTipRole+1,
+        Size = Qt::ToolTipRole+2
+    };
+
     DeviceModel( QObject* parent = nullptr );
     ~DeviceModel() override;
 
@@ -46,6 +57,7 @@ public:
 
     int rowCount( const QModelIndex& parent = QModelIndex() ) const override;
     QVariant data( const QModelIndex& index, int role = Qt::DisplayRole ) const override;
+    QHash< int, QByteArray > roleNames() const override;
 
     Device* deviceForIndex( const QModelIndex& index ) const;
 
@@ -57,6 +69,10 @@ public:
 
 private:
     DeviceList m_devices;
+    QString m_test = "test!";
+
+signals:
+    void countChanged();
 };
 
 #endif /* DEVICEMODEL_H */
