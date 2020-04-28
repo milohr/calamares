@@ -195,3 +195,21 @@ DeviceModel::removeDevice( Device* device )
     emit countChanged();
     endResetModel();
 }
+
+int
+DeviceModel::currentIndex() const
+{
+    return m_currentIndex;
+}
+
+void
+DeviceModel::setCurrentIndex(const int& index)
+{
+    if(m_currentIndex == index)
+        return;
+
+    m_currentIndex = index;
+    emit currentIndexChanged();
+}
+
+

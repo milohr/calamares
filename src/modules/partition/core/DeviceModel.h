@@ -33,7 +33,7 @@ class DeviceModel : public QAbstractListModel
 {
     Q_OBJECT
     Q_PROPERTY(int count READ rowCount NOTIFY countChanged FINAL)
-    Q_PROPERTY(QString test MEMBER m_test )
+    Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged)
 
 public:
     enum Roles
@@ -67,12 +67,16 @@ public:
 
     void removeDevice( Device* device );
 
+    void setCurrentIndex(const int &index);
+    int currentIndex() const;
+
 private:
     DeviceList m_devices;
-    QString m_test = "test!";
+    int m_currentIndex = -1;
 
 signals:
     void countChanged();
+    void currentIndexChanged();
 };
 
 #endif /* DEVICEMODEL_H */
