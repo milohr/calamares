@@ -58,6 +58,7 @@ if ( KPMcore_FOUND AND Qt5DBus_FOUND AND KF5CoreAddons_FOUND AND KF5Config_FOUND
             ${_partition}/core/PartitionLayout.cpp
             ${_partition}/core/PartitionModel.cpp
             ${_partition}/core/PartUtils.cpp
+            ${_partition}/gui/ScanningDialog.cpp
             ${_partition}/jobs/ClearMountsJob.cpp
             ${_partition}/jobs/ClearTempMountsJob.cpp
             ${_partition}/jobs/CreatePartitionJob.cpp

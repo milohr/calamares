@@ -261,7 +261,7 @@ PartitionCoreModule::deviceModel() const
     return m_deviceModel;
 }
 
-QAbstractItemModel*
+BootLoaderModel*
 PartitionCoreModule::bootLoaderModel() const
 {
     return m_bootLoaderModel;

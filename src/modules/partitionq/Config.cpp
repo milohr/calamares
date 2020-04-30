@@ -18,7 +18,6 @@
  */
 
 #include "Config.h"
-#include "core/BootLoaderModel.h"
 #include "core/KPMHelpers.h"
 #include "core/OsproberEntry.h"
 #include "core/PartUtils.h"
@@ -57,7 +56,6 @@ using CalamaresUtils::Partition::findPartitionByPath;
 
 DeviceInfo::DeviceInfo(QObject *parent) : QObject(parent)
 {
-
 }
 
 void
@@ -169,12 +167,18 @@ SwapChoice pickOne( const SwapChoiceSet& s )
 Config::Config(QObject* parent )
 : QObject( parent )
 , m_deviceModel(nullptr)
+, m_bootloaderModel(nullptr)
 , m_core( nullptr )
 , m_installChoice( NoChoice )
 , m_isEfi( false )
 , m_nextEnabled( false )
+, m_grp( new OptGroup (this) )
+, m_alongsideOption( new Opt(this) )
+, m_eraseOption( new Opt(this) )
+, m_replaceOption( new Opt(this) )
+, m_somethingElseOption( new Opt(this) )
+, m_encryptOption ( new EncryptOpt(this) )
 , m_lastSelectedDeviceIndex( -1 )
-, m_enableEncryption ( true )
 // , m_availableSwapChoices( swapChoices )
 // , m_eraseSwapChoice( pickOne( swapChoices ) )
 , m_allowManualPartitioning( true )
@@ -185,7 +189,7 @@ Config::Config(QObject* parent )
     auto gs = Calamares::JobQueue::instance()->globalStorage();
 
     m_defaultFsType = gs->value( "defaultFileSystemType" ).toString();
-    m_enableEncryption = gs->value( "enableLuksAutomatedPartitioning" ).toBool();
+    m_encryptOption->enabled = gs->value( "enableLuksAutomatedPartitioning" ).toBool();
     m_allowManualPartitioning = gs->value( "allowManualPartitioning" ).toBool();
 
     if ( FileSystem::typeForName( m_defaultFsType ) == FileSystem::Unknown )
@@ -214,29 +218,27 @@ Config::init(const SwapChoiceSet& swapChoices, PartitionCoreModule* core)
     m_core = core;
 
     m_deviceModel = core->deviceModel();
-    emit devicesChanged();
-
-    m_availableSwapChoices = swapChoices;
-    m_eraseSwapChoice = pickOne(swapChoices);
+    emit devicesModelChanged();
 
     m_bootloaderModel = core->bootLoaderModel();
-    // When the chosen bootloader device changes, we update the choice in the PCM
-//     connect( m_bootloaderModel, QOverload<int>::of( &QComboBox::currentIndexChanged ),
-//              this, [this]( int newIndex )
-//              {
-//                  QComboBox* bcb = qobject_cast< QComboBox* >( sender() );
-//                  if ( bcb )
-//                  {
-//                      QVariant var = bcb->itemData( newIndex, BootLoaderModel::BootLoaderPathRole );
-//                      if ( !var.isValid() )
-//                          return;
-//                      m_core->setBootLoaderInstallPath( var.toString() );
-//                  }
-//              } );
-//
-
+    emit bootloaderModelChanged();
 
     m_isEfi = PartUtils::isEfiSystem();
+    emit isEfiChanged();
+
+    m_availableSwapChoices = swapChoices; //TODO a model or whats up?
+    m_eraseSwapChoice = pickOne(swapChoices);
+
+    // When the chosen bootloader device changes, we update the choice in the PCM
+    connect( m_bootloaderModel, &BootLoaderModel::currentIndexChanged,
+             this, [this]( int newIndex )
+             {
+                 QVariant var = m_bootloaderModel->data( m_bootloaderModel->index(newIndex, 0) , BootLoaderModel::BootLoaderPathRole );
+                 if ( !var.isValid() )
+                     return;
+                 m_core->setBootLoaderInstallPath( var.toString() );
+
+             } );
 
     setupChoices();
 
@@ -245,7 +247,7 @@ Config::init(const SwapChoiceSet& swapChoices, PartitionCoreModule* core)
              this, [=]
              {
                  m_deviceModel = core->deviceModel();
-                 emit devicesChanged();
+                 emit devicesModelChanged();
                  m_deviceModel->setCurrentIndex( m_lastSelectedDeviceIndex );
              } );
 
@@ -254,8 +256,9 @@ Config::init(const SwapChoiceSet& swapChoices, PartitionCoreModule* core)
              &DeviceModel::currentIndexChanged,
              this, &Config::applyDeviceChoice );
 
-    connect( this, &Config::enableEncryptionChanged,
+    connect( m_encryptOption, &EncryptOpt::checkedChanged,
              this, &Config::onEncryptWidgetStateChanged );
+
     connect( this, &Config::reuseHomeChanged,
              this, &Config::onHomeCheckBoxStateChanged );
 
@@ -289,93 +292,70 @@ Config::setupChoices()
     //  3) Manual
     //  TBD: upgrade option?
 
-//     QSize iconSize( CalamaresUtils::defaultIconSize().width() * 2,
-//                     CalamaresUtils::defaultIconSize().height() * 2 );
-//     m_grp = new QButtonGroup( this );
-//
-//     m_alongsideButton = new PrettyRadioButton;
-//     m_alongsideButton->setIconSize( iconSize );
-//     m_alongsideButton->setIcon( CalamaresUtils::defaultPixmap( CalamaresUtils::PartitionAlongside,
-//                                                                CalamaresUtils::Original,
-//                                                                iconSize ) );
-//     m_grp->addButton( m_alongsideButton->buttonWidget(), Alongside );
-//
-//     m_eraseButton = new PrettyRadioButton;
-//     m_eraseButton->setIconSize( iconSize );
-//     m_eraseButton->setIcon( CalamaresUtils::defaultPixmap( CalamaresUtils::PartitionEraseAuto,
-//                                                            CalamaresUtils::Original,
-//                                                            iconSize ) );
-//     m_grp->addButton( m_eraseButton->buttonWidget(), Erase );
-//
-//     m_replaceButton = new PrettyRadioButton;
-//
-//     m_replaceButton->setIconSize( iconSize );
-//     m_replaceButton->setIcon( CalamaresUtils::defaultPixmap( CalamaresUtils::PartitionReplaceOs,
-//                                                              CalamaresUtils::Original,
-//                                                              iconSize ) );
-//     m_grp->addButton( m_replaceButton->buttonWidget(), Replace );
-//
-//     // Fill up swap options
-//     // .. TODO: only if enabled in the config
+
+    m_alongsideOption->setIcon(CalamaresUtils::defaultPixmapUrl( CalamaresUtils::PartitionAlongside, CalamaresUtils::Original));
+    m_grp->addOpt( m_alongsideOption, Alongside );
+
+
+    m_eraseOption->setIcon(CalamaresUtils::defaultPixmapUrl( CalamaresUtils::PartitionEraseAuto, CalamaresUtils::Original));
+    m_grp->addOpt( m_alongsideOption, Erase );
+
+
+    m_replaceOption->setIcon(CalamaresUtils::defaultPixmapUrl( CalamaresUtils::PartitionReplaceOs, CalamaresUtils::Original));
+    m_grp->addOpt( m_alongsideOption, Replace );
+
+
+    m_somethingElseOption->setIcon(CalamaresUtils::defaultPixmapUrl( CalamaresUtils::PartitionManual, CalamaresUtils::Original));
+    m_grp->addOpt( m_alongsideOption, Manual );
+
+
+    // Fill up swap options
+    // .. TODO: only if enabled in the config
 //     if ( m_availableSwapChoices.count() > 1 )
 //     {
 //         m_eraseSwapChoiceComboBox = createCombo( m_availableSwapChoices, m_eraseSwapChoice );
 //         m_eraseButton->addOptionsComboBox( m_eraseSwapChoiceComboBox );
-//     }
+//     } //TODO same issue deciding if it is a model or what up
+
+
 //
-//     m_itemsLayout->addWidget( m_alongsideButton );
-//     m_itemsLayout->addWidget( m_replaceButton );
-//     m_itemsLayout->addWidget( m_eraseButton );
-//
-//     m_somethingElseButton = new PrettyRadioButton;
-//     m_somethingElseButton->setIconSize( iconSize );
-//     m_somethingElseButton->setIcon( CalamaresUtils::defaultPixmap( CalamaresUtils::PartitionManual,
-//                                                                    CalamaresUtils::Original,
-//                                                                    iconSize ) );
-//     m_itemsLayout->addWidget( m_somethingElseButton );
-//     m_grp->addButton( m_somethingElseButton->buttonWidget(), Manual );
-//
-//     m_itemsLayout->addStretch();
-//
-//     connect( m_grp, QOverload<int, bool>::of( &QButtonGroup::buttonToggled ),
-//              this, [ this ]( int id, bool checked )
-//              {
-//                  if ( checked )  // An action was picked.
-//                  {
-//                      m_installChoice = static_cast< InstallChoice >( id );
-//                      updateNextEnabled();
-//
-//                      emit actionChosen();
-//                  }
-//                  else    // An action was unpicked, either on its own or because of another selection.
-//                  {
-//                      if ( m_grp->checkedButton() == nullptr )  // If no other action is chosen, we must
-//                      {                                         // set m_installChoice to NoChoice and reset previews.
-//                          m_installChoice = NoChoice;
-//                          updateNextEnabled();
-//
-//                          emit actionChosen();
-//                      }
-//                  }
-//              } );
-//
-//     m_rightLayout->setStretchFactor( m_itemsLayout, 1 );
-//     m_rightLayout->setStretchFactor( m_previewBeforeFrame, 0 );
-//     m_rightLayout->setStretchFactor( m_previewAfterFrame, 0 );
-//
-//     connect( this, &ChoicePage::actionChosen,
-//              this, &ChoicePage::onActionChanged );
+    connect( m_grp, &OptGroup::optToggled,
+             this, [ this ]( int id, bool checked )
+             {
+                 if ( checked )  // An action was picked.
+                 {
+                     m_installChoice = static_cast< InstallChoice >( id );
+                     updateNextEnabled();
+
+                     emit actionChosen();
+                 }
+                 else    // An action was unpicked, either on its own or because of another selection.
+                 {
+                     if ( m_grp->checkedOpt() == nullptr )  // If no other action is chosen, we must
+                     {                                         // set m_installChoice to NoChoice and reset previews.
+                         m_installChoice = NoChoice;
+                         updateNextEnabled();
+
+                         emit actionChosen();
+                     }
+                 }
+             } );
+
+
+    connect( this, &Config::actionChosen,
+             this, &Config::onActionChanged );
+
 //     if ( m_eraseSwapChoiceComboBox )
 //         connect( m_eraseSwapChoiceComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
-//                  this, &ChoicePage::onEraseSwapChoiceChanged );
+//                  this, &ChoicePage::onEraseSwapChoiceChanged ); //TODO same swap model issue
 //
-//         CALAMARES_RETRANSLATE(
-//             m_somethingElseButton->setText( tr( "<strong>Manual partitioning</strong><br/>"
-//             "You can create or resize partitions yourself."
-//             " Having a GPT partition table and <strong>fat32 512Mb /boot partition "
-//             "is a must for UEFI installs</strong>, either use an existing without formatting or create one." ) );
+        CALAMARES_RETRANSLATE(
+            m_somethingElseOption->setLabel( tr( "<strong>Manual partitioning</strong><br/>"
+            "You can create or resize partitions yourself."
+            " Having a GPT partition table and <strong>fat32 512Mb /boot partition "
+            "is a must for UEFI installs</strong>, either use an existing without formatting or create one." ) );
 //             updateSwapChoicesTr( m_eraseSwapChoiceComboBox );
-//         )
+        )
 }
 
 /**
@@ -399,17 +379,10 @@ Config::hideButtons()
    m_deviceEditable = false;
    emit deviceEditableChanged();
 
-   m_canInstallAlongside = false;
-   emit canInstallAlongsideChanged();
-
-   m_canErase = false;
-   emit canEraseChanged();
-
-   m_canReplace = false;
-   emit canReplaceChanged();
-
-   m_canSomethingElse = false;
-   emit canSomethingElseChanged();
+   m_eraseOption->hide();
+   m_replaceOption->hide();
+   m_alongsideOption->hide();
+   m_somethingElseOption->hide();
 }
 
 /**
@@ -1542,7 +1515,7 @@ Config::finalize()
 }
 
 DeviceModel *
-Config::devices() const
+Config::devicesModel() const
 {
     return m_deviceModel;
 }

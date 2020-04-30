@@ -34,6 +34,7 @@ class QComboBox;
 class BootLoaderModel : public QStandardItemModel
 {
     Q_OBJECT
+    Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged)
 public:
     enum
     {
@@ -52,16 +53,35 @@ public:
 
     void update();
 
+    int rowCount( const QModelIndex& parent = QModelIndex() ) const override;
     QVariant data( const QModelIndex& index, int role = Qt::DisplayRole ) const override;
+    QHash< int, QByteArray > roleNames() const override;
 
     using DeviceList = QList< Device* >;
+
+    int currentIndex() const
+    {
+        return m_currentIndex;
+    }
+
+    void setCurrentIndex(const int & index)
+    {
+        if(m_currentIndex == index)
+            return;
+
+        m_currentIndex = index;
+        emit currentIndexChanged(m_currentIndex);
+    }
 
 private:
     DeviceList m_devices;
     mutable QMutex m_lock;
-
+    int m_currentIndex = -1;
     void createMbrItems();
     void updateInternal();
+
+signals:
+    void currentIndexChanged(int newIndex);
 };
 
 namespace Calamares

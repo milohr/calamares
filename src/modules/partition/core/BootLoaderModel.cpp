@@ -22,7 +22,6 @@
 
 #include "core/KPMHelpers.h"
 #include "core/PartitionInfo.h"
-
 #include "utils/Logger.h"
 
 // KPMcore
@@ -40,7 +39,7 @@ createBootLoaderItem( const QString& description, const QString& path, bool isPa
 }
 
 BootLoaderModel::BootLoaderModel( QObject* parent )
-    : QStandardItemModel( parent )
+: QStandardItemModel( parent )
 {
 }
 
