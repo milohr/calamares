@@ -50,10 +50,11 @@ class Opt : public QObject // to wrap any optional choice
     Q_PROPERTY(bool visible READ visible NOTIFY visibleChanged FINAL)
     Q_PROPERTY(bool enabled READ enabled NOTIFY enabledChanged FINAL)
     Q_PROPERTY(bool checked READ checked NOTIFY checkedChanged FINAL)
+    Q_PROPERTY(bool exclusive READ exclusive NOTIFY exclusiveChanged FINAL)
     Q_PROPERTY(QString label READ label NOTIFY labelChanged FINAL)
     Q_PROPERTY(QString tooltip READ tooltip NOTIFY tooltipChanged FINAL)
-    Q_PROPERTY(QString message READ message NOTIFY messageChanged FINAl)
-    Q_PROPERTY(QString icon READ icon NOTIFY iconChanged FINAl)
+    Q_PROPERTY(QString message READ message NOTIFY messageChanged FINAL)
+    Q_PROPERTY(QString icon READ icon NOTIFY iconChanged FINAL)
 
 public:
     explicit Opt(QObject * parent = nullptr ) : QObject(parent) {}
@@ -85,6 +86,21 @@ public:
     {
         return m_enabled;
     }
+
+    void setExclusive(const bool &value)
+    {
+        if(m_exclusive == value)
+            return;
+
+        m_exclusive = value;
+        emit exclusiveChanged();
+    }
+
+    bool exclusive() const
+    {
+        return m_exclusive;
+    }
+
 
     void setChecked(const bool &value)
     {
@@ -166,7 +182,7 @@ public:
         this->setVisible(true);
     }
 
-private:
+protected:
     QString m_label;
     QString m_message;
     QString m_tooltip;
@@ -174,6 +190,7 @@ private:
     bool m_enabled = true;
     bool m_visible = true;
     bool m_checked = false;
+    bool m_exclusive = false;
 
 signals:
     void visibleChanged();
@@ -183,6 +200,7 @@ signals:
     void tooltipChanged();
     void messageChanged();
     void iconChanged();
+    void exclusiveChanged();
 };
 
 class OptGroup : public QObject //to group opt that are autoexclusive
@@ -198,6 +216,12 @@ public:
         connect(opt, &Opt::checkedChanged, [this, id]()
         {
             auto opt = m_opts[id];
+
+            if(m_exclusive)
+            {
+                uncheckAll();
+            }
+
             if(opt->checked())
             {
                 this->m_checkedOpt = opt;
@@ -212,13 +236,13 @@ public:
         return m_checkedOpt;
     }
 
-    void setAutoExclusive(const bool &value)
+    void setExclusive(const bool &value)
     {
-        if(m_autoExclusive == value)
+        if(m_exclusive == value)
             return;
 
-        m_autoExclusive = value;
-        emit autoExclusiveChanged();
+        m_exclusive = value;
+        emit exclusiveChanged();
 
         uncheckAll();
     }
@@ -226,24 +250,27 @@ public:
     void uncheckAll()
     {
         for(auto opt : m_opts)
-            opt->setChecked(false);
+        {
+            if(opt->exclusive())
+                opt->setChecked(false);
+        }
     }
 
 private:
    Opts m_opts;
    Opt * m_checkedOpt = nullptr;
-   bool m_autoExclusive = true;
+   bool m_exclusive = true;
 
 signals:
     void optToggled(int id, bool checked);
-    void autoExclusiveChanged();
+    void exclusiveChanged();
 };
 
 class EncryptOpt : public Opt
 {
   Q_OBJECT
-  Q_PROPERTY( QString encryptionPassphrase WRITE setEncryptionPassphrase NOTIFY encryptionPassphraseChanged)
-  Q_PROPERTY( QString encryptionConfirmPassphrase WRITE setEncryptionConfirmPassphrase NOTIFY encryptionConfirmPassphraseChanged)
+  Q_PROPERTY( QString passphrase READ passphrase WRITE setPassphrase NOTIFY passphraseChanged)
+  Q_PROPERTY( QString confirmPassphrase READ confirmPassphrase WRITE setConfirmPassphrase NOTIFY confirmPassphraseChanged)
 
 public:
     enum class Encryption : unsigned short
@@ -254,22 +281,78 @@ public:
     };
 
     using Opt::Opt;
-    void setEncryptionConfirmPassphrase(const QString &value);
-    void setEncryptionPassphrase(const QString &value);
-    EncryptOpt::Encryption encryptionState() const;
+
+    QString passphrase() const
+    {
+        return m_passphrase;
+    }
+
+    QString confirmPassphrase() const
+    {
+        return m_confirmPassphrase;
+    }
+
+    void setConfirmPassphrase(const QString &value)
+    {
+        if(m_confirmPassphrase == value)
+            return;
+
+        m_confirmPassphrase = value;
+        emit confirmPassphraseChanged();
+
+    }
+    void setPassphrase(const QString &value)
+    {
+        if(m_passphrase == value)
+            return;
+
+        m_passphrase = value;
+        emit passphraseChanged();
+        updateState();
+    }
+
+    EncryptOpt::Encryption encryptionState() const
+    {
+        return m_state;
+    }
 
 private:
-    QString m_encryptionPassphrase;
-    QString m_encryptionConfirmPassphrase;
+    QString m_passphrase;
+    QString m_confirmPassphrase;
 
-    void updateEncryptionState();
+    void updateState()
+    {
+        Encryption newState;
+        if ( m_enabled )
+        {
+            if ( !m_passphrase.isEmpty()
+                && m_passphrase == m_confirmPassphrase )
+            {
+                newState = Encryption::Confirmed;
+            }
+            else
+            {
+                newState = Encryption::Unconfirmed;
+            }
+        }
+        else
+        {
+            newState = Encryption::Disabled;
+        }
 
-    EncryptOpt::Encryption  m_encryptionState = EncryptOpt::Encryption::Unconfirmed;
+        if ( newState != m_state )
+        {
+            m_state = newState;
+            emit stateChanged();
+        }
+    }
+
+    EncryptOpt::Encryption  m_state = EncryptOpt::Encryption::Unconfirmed;
 
 signals:
-    void encryptionConfirmPassphraseChanged();
-    void encryptionPassphraseChanged();
-    void encryptionStateChanged();
+    void confirmPassphraseChanged();
+    void passphraseChanged();
+    void stateChanged();
 
 };
 
@@ -298,7 +381,49 @@ Q_OBJECT
 using QAbstractListModel::QAbstractListModel;
 
 public:
-    int currentIndex() const;
+    int currentIndex() const
+    {
+        return m_currentIndex;
+    }
+
+    void setCurrentIndex(const int &index)
+    {
+        if(m_currentIndex == index)
+            return;
+
+        m_currentIndex = index;
+        emit currentIndexChanged();
+    }
+
+    void addItem(const QString &label, const int &index )
+    {
+
+    }
+
+private:
+    int m_currentIndex = -1;
+
+signals:
+    void currentIndexChanged();
+};
+
+class EfiOpt : public Opt
+{
+    Q_OBJECT
+    Q_PROPERTY(EfiModel * model READ model NOTIFY modelChanged FINAL)
+
+public:
+    using Opt::Opt;
+    EfiModel * model() const
+    {
+        return m_model;
+    }
+
+private:
+    EfiModel *m_model;
+
+signals:
+    void modelChanged();
 };
 
 class Config : public QObject
@@ -315,7 +440,8 @@ class Config : public QObject
     Q_PROPERTY( Opt *alongsideOption MEMBER m_alongsideOption NOTIFY alongsideOptionChanged FINAL)
     Q_PROPERTY( Opt *replaceOption MEMBER m_replaceOption NOTIFY replaceOptionChanged FINAL)
     Q_PROPERTY( Opt *somethingElseOption MEMBER m_somethingElseOption NOTIFY somethingElseOptionChanged FINAL)
-    Q_PROPERTY( Opt *encryptOption MEMBER m_encryptOption NOTIFY encryptOptionChanged FINAL)
+    Q_PROPERTY( EncryptOpt *encryptOption MEMBER m_encryptOption NOTIFY encryptOptionChanged FINAL)
+    Q_PROPERTY( EfiOpt *efiOption MEMBER m_efiOption NOTIFY efiOptionChanged FINAL)
 
     Q_PROPERTY( bool efiAvailable MEMBER m_efiAvailable NOTIFY efiAvailableChanged FINAL)
 
@@ -333,6 +459,13 @@ public:
     Config(QObject* parent = nullptr );
 
     void init(const SwapChoiceSet& swapChoices, PartitionCoreModule* core);
+
+    /**
+     * @brief isNextEnabled answers whether the current state of the page is such
+     * that progressing to the next page should be allowed.
+     * @return true if next is allowed, otherwise false.
+     */
+    bool isNextEnabled() const;
 
     QString prettyStatus() const;
 
@@ -352,8 +485,6 @@ public:
     int lastSelectedDeviceIndex();
     void setLastSelectedDeviceIndex( int index );
 
-    void setReuseHome(const bool &value);
-    bool reuseHome() const;
     /**
      * @brief onLeave runs when control passes from this page to another one.
      */
@@ -361,7 +492,6 @@ public:
 
 private:
     DeviceModel* m_deviceModel;
-    EfiModel * m_efiModel;
     BootLoaderModel * m_bootloaderModel;
 
     PartitionCoreModule* m_core;
@@ -390,12 +520,7 @@ private:
     // Translations support
 //     void updateSwapChoicesTr( QComboBox* box );
 
-
     QMutex m_previewsMutex;
-
-
-//     QComboBox* m_drivesCombo;
-
     OptGroup* m_grp;
     Opt* m_alongsideOption;
     Opt* m_eraseOption;
@@ -406,6 +531,8 @@ private:
 //     QComboBox* m_eraseSwapChoiceComboBox;  // UI, see also m_eraseSwapChoice
 
     DeviceInfo* m_deviceInfo;
+    Opt* m_reuseHomeOption;
+    EfiOpt* m_efiOption;
 
     QPointer< PreviewBar > m_beforePartitionBarsView;
 //     QPointer< PartitionLabelsView > m_beforePartitionLabelsView;
@@ -432,7 +559,6 @@ private:
 
     bool m_efiAvailable;
     bool m_bootloaderAvailable;
-    bool m_reuseHome;
 
 
     QString m_prettyStatus;
@@ -451,6 +577,7 @@ private slots:
 
 protected:
     DeviceModel* devicesModel() const;
+    BootLoaderModel* bootloaderModel() const;
 
 signals:
     void nextStatusChanged( bool );
@@ -466,13 +593,12 @@ signals:
 
     void eraseOptionChanged();
     void alongsideOptionChanged();
-    void replaceOption();
+    void replaceOptionChanged();
     void somethingElseOptionChanged();
     void encryptOptionChanged();
-
+    void efiOptionChanged();
 
     void efiAvailableChanged();
-    void reuseHomeChanged();
     void isEfiChanged();
 };
 

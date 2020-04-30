@@ -158,6 +158,20 @@ BootLoaderModel::data( const QModelIndex& index, int role ) const
     return QStandardItemModel::data( index, role );
 }
 
+int
+BootLoaderModel::rowCount( const QModelIndex& parent ) const
+{
+    return parent.isValid() ? 0 : m_devices.count();
+}
+
+QHash< int, QByteArray >
+BootLoaderModel::roleNames() const
+{
+    return  { { Roles::Display, "display" },
+    { Roles::BootLoaderPathRole, "path" },
+    { Roles::IsPartitionRole, "ispartition" }};
+}
+
 namespace Calamares
 {
 int

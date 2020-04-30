@@ -36,8 +36,10 @@ class BootLoaderModel : public QStandardItemModel
     Q_OBJECT
     Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged)
 public:
-    enum
+
+    enum Roles
     {
+        Display = Qt::DisplayRole,
         BootLoaderPathRole = Qt::UserRole + 1,
         IsPartitionRole
     };
