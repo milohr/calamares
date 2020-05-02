@@ -32,7 +32,6 @@
 #include "JobQueue.h"
 #include "partition/PartitionIterator.h"
 #include "partition/PartitionQuery.h"
-#include "utils/Logger.h"
 #include "utils/Retranslator.h"
 #include "utils/Units.h"
 
@@ -178,6 +177,7 @@ Config::Config(QObject* parent )
 , m_replaceOption( new Opt(this) )
 , m_somethingElseOption( new Opt(this) )
 , m_encryptOption ( new EncryptOpt(this) )
+, m_deviceInfo( new DeviceInfo (this) )
 , m_reuseHomeOption ( new Opt(this) )
 , m_efiOption ( new EfiOpt (this) )
 , m_lastSelectedDeviceIndex( -1 )
@@ -190,7 +190,7 @@ Config::Config(QObject* parent )
     auto gs = Calamares::JobQueue::instance()->globalStorage();
 
     m_defaultFsType = gs->value( "defaultFileSystemType" ).toString();
-    m_encryptOption->setEnabled (gs->value( "enableLuksAutomatedPartitioning" ).toBool());
+//     m_encryptOption->setEnabled (gs->value( "enableLuksAutomatedPartitioning" ).toBool());
     m_allowManualPartitioning = gs->value( "allowManualPartitioning" ).toBool();
 
     if ( FileSystem::typeForName( m_defaultFsType ) == FileSystem::Unknown )
@@ -209,8 +209,16 @@ Config::Config(QObject* parent )
 //     m_previewAfterFrame->setSizePolicy( QSizePolicy::Preferred, QSizePolicy::Expanding );
 //     m_previewAfterLabel->hide();
 //     m_previewAfterFrame->hide();
-    m_encryptOption->hide();
-    m_reuseHomeOption->hide();
+
+    m_eraseOption->setLabel( tr( "<strong>Erase disk</strong>" ) );
+    m_alongsideOption->setLabel( tr( "<strong>Install alongside</strong>") );
+    m_replaceOption->setLabel( tr( "<strong>Replace a partition</strong>" ) );
+    m_somethingElseOption->setLabel( tr( "<strong>Manual partitioning</strong>" ) );
+    m_encryptOption->setLabel(tr("Encrypt system"));
+    m_reuseHomeOption->setLabel( tr ("Reuse Home" ));
+//     m_encryptOption->hide();
+//     m_reuseHomeOption->hide();
+
     gs->insert( "reuseHome", false );
 }
 
@@ -300,15 +308,15 @@ Config::setupChoices()
 
 
 //     m_eraseOption->setIcon(CalamaresUtils::defaultPixmapUrl( CalamaresUtils::PartitionEraseAuto, CalamaresUtils::Original));
-    m_grp->addOpt( m_alongsideOption, Erase );
+    m_grp->addOpt( m_eraseOption, Erase );
 
 
 //     m_replaceOption->setIcon(CalamaresUtils::defaultPixmapUrl( CalamaresUtils::PartitionReplaceOs, CalamaresUtils::Original));
-    m_grp->addOpt( m_alongsideOption, Replace );
+    m_grp->addOpt( m_replaceOption, Replace );
 
 
 //     m_somethingElseOption->setIcon(CalamaresUtils::defaultPixmapUrl( CalamaresUtils::PartitionManual, CalamaresUtils::Original));
-    m_grp->addOpt( m_alongsideOption, Manual );
+    m_grp->addOpt( m_somethingElseOption, Manual );
 
 
     // Fill up swap options
@@ -352,8 +360,7 @@ Config::setupChoices()
 //                  this, &ChoicePage::onEraseSwapChoiceChanged ); //TODO same swap model issue
 //
         CALAMARES_RETRANSLATE(
-            m_somethingElseOption->setLabel( tr( "<strong>Manual partitioning</strong><br/>"
-            "You can create or resize partitions yourself."
+            m_somethingElseOption->setMessage( tr( "You can create or resize partitions yourself."
             " Having a GPT partition table and <strong>fat32 512Mb /boot partition "
             "is a must for UEFI installs</strong>, either use an existing without formatting or create one." ) );
 //             updateSwapChoicesTr( m_eraseSwapChoiceComboBox );
@@ -1237,182 +1244,168 @@ Config::setupActions()
     }
     #endif
 
-    for ( auto it = PartitionIterator::begin( currentDevice );
-         it != PartitionIterator::end( currentDevice ); ++it )
-         {
-             if ( PartUtils::canBeResized( *it ) )
-             {
-                 cDebug() << Logger::SubEntry << "contains resizable" << it;
-                 atLeastOneCanBeResized = true;
-             }
-             if ( PartUtils::canBeReplaced( *it ) )
-             {
-                 cDebug() << Logger::SubEntry << "contains replaceable" << it;
-                 atLeastOneCanBeReplaced = true;
-             }
-             if ( (*it)->isMounted() )
-             {
-                 atLeastOneIsMounted = true;
-             }
-         }
+    for ( auto it = PartitionIterator::begin( currentDevice ); it != PartitionIterator::end( currentDevice ); ++it )
+    {
+        if ( PartUtils::canBeResized( *it ) )
+        {
+            cDebug() << Logger::SubEntry << "contains resizable" << it;
+            atLeastOneCanBeResized = true;
+        }
+        if ( PartUtils::canBeReplaced( *it ) )
+        {
+            cDebug() << Logger::SubEntry << "contains replaceable" << it;
+            atLeastOneCanBeReplaced = true;
+        }
+        if ( (*it)->isMounted() )
+        {
+            atLeastOneIsMounted = true;
+        }
+    }
 
-         if ( osproberEntriesForCurrentDevice.count() == 0 )
-         {
-             CALAMARES_RETRANSLATE(
-                 cDebug() << "Setting texts for 0 osprober entries";
-                 m_prettyStatus = ( tr( "This storage device does not seem to have an operating system on it. "
-                 "What would you like to do?<br/>"
-                 "You will be able to review and confirm your choices "
-                 "before any change is made to the storage device." ) );
-                 emit prettyStatusChanged();
+    if ( osproberEntriesForCurrentDevice.count() == 0 )
+    {
+        CALAMARES_RETRANSLATE(
+            cDebug() << "Setting texts for 0 osprober entries";
+            m_prettyStatus = ( tr( "This storage device does not seem to have an operating system on it. "
+            "What would you like to do?<br/>"
+            "You will be able to review and confirm your choices "
+            "before any change is made to the storage device." ) );
+            emit prettyStatusChanged();
 
-                 m_eraseOption->setLabel( tr( "<strong>Erase disk</strong><br/>"
-                 "This will <font color=\"red\">delete</font> all data "
-                 "currently present on the selected storage device." ) );
+            m_eraseOption->setMessage( tr("This will <font color=\"red\">delete</font> all data "
+            "currently present on the selected storage device."));
 
-                 m_alongsideOption->setLabel( tr( "<strong>Install alongside</strong><br/>"
-                 "The installer will shrink a partition to make room for %1." )
-                 .arg( *Calamares::Branding::ShortVersionedName ) );
+            m_alongsideOption->setMessage( tr( "The installer will shrink a partition to make room for %1." )
+            .arg( *Calamares::Branding::ShortVersionedName ) );
 
-                 m_replaceOption->setLabel( tr( "<strong>Replace a partition</strong><br/>"
-                 "Replaces a partition with %1." )
-                 .arg( *Calamares::Branding::ShortVersionedName ) );
-             )
+            m_replaceOption->setMessage( tr( "Replaces a partition with %1." )
+            .arg( *Calamares::Branding::ShortVersionedName ) );
+        )
 
-             m_replaceOption->hide();
-             m_alongsideOption->hide();
-             m_grp->setExclusive( false );
-             m_replaceOption->setChecked( false );
-             m_alongsideOption->setChecked( false );
-             m_grp->setExclusive( true );
-         }
-         else if ( osproberEntriesForCurrentDevice.count() == 1 )
-         {
-             QString osName = osproberEntriesForCurrentDevice.first().prettyName;
+        m_replaceOption->hide();
+        m_alongsideOption->hide();
+        m_grp->setExclusive( false );
+        m_replaceOption->setChecked( false );
+        m_alongsideOption->setChecked( false );
+        m_grp->setExclusive( true );
+    }
+    else if ( osproberEntriesForCurrentDevice.count() == 1 )
+    {
+        QString osName = osproberEntriesForCurrentDevice.first().prettyName;
 
-             if ( !osName.isEmpty() )
-             {
-                 CALAMARES_RETRANSLATE(
-                     cDebug() << "Setting texts for 1 non-empty osprober entry";
-                     m_prettyStatus = ( tr( "This storage device has %1 on it. "
-                     "What would you like to do?<br/>"
-                     "You will be able to review and confirm your choices "
-                     "before any change is made to the storage device." )
-                     .arg( osName ) );
-                     emit prettyStatusChanged();
+        if ( !osName.isEmpty() )
+        {
+            CALAMARES_RETRANSLATE(
+                cDebug() << "Setting texts for 1 non-empty osprober entry";
+                m_prettyStatus = ( tr( "This storage device has %1 on it. "
+                "What would you like to do?<br/>"
+                "You will be able to review and confirm your choices "
+                "before any change is made to the storage device." )
+                .arg( osName ) );
+                emit prettyStatusChanged();
 
-                     m_alongsideOption->setLabel( tr( "<strong>Install alongside</strong><br/>"
-                     "The installer will shrink a partition to make room for %1." )
-                     .arg( *Calamares::Branding::ShortVersionedName ) );
+                m_alongsideOption->setMessage( tr( "The installer will shrink a partition to make room for %1." )
+                .arg( *Calamares::Branding::ShortVersionedName ) );
 
-                     m_eraseOption->setLabel( tr( "<strong>Erase disk</strong><br/>"
-                     "This will <font color=\"red\">delete</font> all data "
-                     "currently present on the selected storage device." ) );
+                m_eraseOption->setMessage( tr( "This will <font color=\"red\">delete</font> all data "
+                "currently present on the selected storage device." ) );
 
+                m_replaceOption->setMessage( tr( "Replaces a partition with %1." )
+                .arg( *Calamares::Branding::ShortVersionedName ) );
+            )
+        }
+        else
+        {
+            CALAMARES_RETRANSLATE(
+                cDebug() << "Setting texts for 1 empty osprober entry";
+                m_prettyStatus = ( tr( "This storage device already has an operating system on it. "
+                "What would you like to do?<br/>"
+                "You will be able to review and confirm your choices "
+                "before any change is made to the storage device." ) );
 
-                     m_replaceOption->setLabel( tr( "<strong>Replace a partition</strong><br/>"
-                     "Replaces a partition with %1." )
-                     .arg( *Calamares::Branding::ShortVersionedName ) );
-                 )
-             }
-             else
-             {
-                 CALAMARES_RETRANSLATE(
-                     cDebug() << "Setting texts for 1 empty osprober entry";
-                     m_prettyStatus = ( tr( "This storage device already has an operating system on it. "
-                     "What would you like to do?<br/>"
-                     "You will be able to review and confirm your choices "
-                     "before any change is made to the storage device." ) );
+                m_alongsideOption->setMessage( tr( "The installer will shrink a partition to make room for %1." )
+                .arg( *Calamares::Branding::ShortVersionedName ) );
 
-                     m_alongsideOption->setLabel( tr( "<strong>Install alongside</strong><br/>"
-                     "The installer will shrink a partition to make room for %1." )
-                     .arg( *Calamares::Branding::ShortVersionedName ) );
+                m_eraseOption->setMessage( tr( "This will <font color=\"red\">delete</font> all data "
+                "currently present on the selected storage device." ) );
 
-                     m_eraseOption->setLabel( tr( "<strong>Erase disk</strong><br/>"
-                     "This will <font color=\"red\">delete</font> all data "
-                     "currently present on the selected storage device." ) );
+                m_replaceOption->setMessage( tr( "Replaces a partition with %1." )
+                .arg( *Calamares::Branding::ShortVersionedName ) );
 
-                     m_replaceOption->setLabel( tr( "<strong>Replace a partition</strong><br/>"
-                     "Replaces a partition with %1." )
-                     .arg( *Calamares::Branding::ShortVersionedName ) );
-//
-                     emit prettyStatusChanged();
-                 )
-             }
-         }
-         else
-         {
-             // osproberEntriesForCurrentDevice has at least 2 items.
+                emit prettyStatusChanged();
+            )
+        }
+    }
+    else
+    {
+        // osproberEntriesForCurrentDevice has at least 2 items.
 
-             CALAMARES_RETRANSLATE(
-                 cDebug() << "Setting texts for >= 2 osprober entries";
+        CALAMARES_RETRANSLATE(
+            cDebug() << "Setting texts for >= 2 osprober entries";
 
-                 m_prettyStatus = ( tr( "This storage device has multiple operating systems on it. "
-                 "What would you like to do?<br/>"
-                 "You will be able to review and confirm your choices "
-                 "before any change is made to the storage device." ) );
-                 emit prettyStatusChanged();
+            m_prettyStatus = ( tr( "This storage device has multiple operating systems on it. "
+            "What would you like to do?<br/>"
+            "You will be able to review and confirm your choices "
+            "before any change is made to the storage device." ) );
+            emit prettyStatusChanged();
 
-                 m_alongsideOption->setLabel( tr( "<strong>Install alongside</strong><br/>"
-                 "The installer will shrink a partition to make room for %1." )
-                 .arg( *Calamares::Branding::ShortVersionedName ) );
+            m_alongsideOption->setMessage( tr( "The installer will shrink a partition to make room for %1." )
+            .arg( *Calamares::Branding::ShortVersionedName ) );
 
-                 m_eraseOption->setLabel( tr( "<strong>Erase disk</strong><br/>"
-                 "This will <font color=\"red\">delete</font> all data "
-                 "currently present on the selected storage device." ) );
+            m_eraseOption->setMessage( tr( "This will <font color=\"red\">delete</font> all data "
+            "currently present on the selected storage device." ) );
 
-                 m_replaceOption->setLabel( tr( "<strong>Replace a partition</strong><br/>"
-                 "Replaces a partition with %1." )
-                 .arg( *Calamares::Branding::ShortVersionedName ) );
-             )
-         }
+            m_replaceOption->setMessage( tr( "Replaces a partition with %1." )
+            .arg( *Calamares::Branding::ShortVersionedName ) );
+        )
+    }
 
-         #ifdef DEBUG_PARTITION_UNSAFE
-         #ifdef DEBUG_PARTITION_LAME
-         // If things can't be broken, allow all the buttons
-         atLeastOneCanBeReplaced = true;
-         atLeastOneCanBeResized = true;
-         atLeastOneIsMounted = false;
-         isInactiveRAID = false;
-         #endif
-         #endif
+    #ifdef DEBUG_PARTITION_UNSAFE
+    #ifdef DEBUG_PARTITION_LAME
+    // If things can't be broken, allow all the buttons
+    atLeastOneCanBeReplaced = true;
+    atLeastOneCanBeResized = true;
+    atLeastOneIsMounted = false;
+    isInactiveRAID = false;
+    #endif
+    #endif
 
-         if ( atLeastOneCanBeReplaced )
-             m_replaceOption->show();
-         else
-         {
-             cDebug() << "Replace button suppressed because none can be replaced.";
-             force_uncheck( m_grp, m_replaceOption );
-         }
+    if ( atLeastOneCanBeReplaced )
+        m_replaceOption->show();
+    else
+    {
+        cDebug() << "Replace button suppressed because none can be replaced.";
+        force_uncheck( m_grp, m_replaceOption );
+    }
 
-         if ( atLeastOneCanBeResized )
-             m_alongsideOption->show();
-         else
-         {
-             cDebug() << "Alongside button suppressed because none can be resized.";
-             force_uncheck( m_grp, m_alongsideOption );
-         }
+    if ( atLeastOneCanBeResized )
+        m_alongsideOption->show();
+    else
+    {
+        cDebug() << "Alongside button suppressed because none can be resized.";
+        force_uncheck( m_grp, m_alongsideOption );
+    }
 
-         if ( !atLeastOneIsMounted && !isInactiveRAID )
-             m_eraseOption->show();  // None mounted
-             else
-             {
-                 cDebug() << "Erase button suppressed"
-                 << "mount?" << atLeastOneIsMounted
-                 << "raid?" << isInactiveRAID;
-                 force_uncheck( m_grp, m_eraseOption );
-             }
+    if ( !atLeastOneIsMounted && !isInactiveRAID )
+        m_eraseOption->show();  // None mounted
+        else
+        {
+            cDebug() << "Erase button suppressed"
+            << "mount?" << atLeastOneIsMounted
+            << "raid?" << isInactiveRAID;
+            force_uncheck( m_grp, m_eraseOption );
+        }
 
-             bool isEfi = PartUtils::isEfiSystem();
-         bool efiSystemPartitionFound = !m_core->efiSystemPartitions().isEmpty();
+        bool isEfi = PartUtils::isEfiSystem();
+    bool efiSystemPartitionFound = !m_core->efiSystemPartitions().isEmpty();
 
-         if ( isEfi && !efiSystemPartitionFound )
-         {
-             cWarning() << "System is EFI but there's no EFI system partition, "
-             "DISABLING alongside and replace features.";
-             m_alongsideOption->hide();
-             m_replaceOption->hide();
-         }
+    if ( isEfi && !efiSystemPartitionFound )
+    {
+        cWarning() << "System is EFI but there's no EFI system partition, "
+        "DISABLING alongside and replace features.";
+        m_alongsideOption->hide();
+        m_replaceOption->hide();
+    }
 }
 
 OsproberEntryList

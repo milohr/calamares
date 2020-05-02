@@ -28,6 +28,7 @@
 #include "core/BootLoaderModel.h"
 
 #include <kpmcore/core/partitiontable.h>
+#include "utils/Logger.h"
 
 #include <QMutex>
 #include <QPointer>
@@ -49,7 +50,7 @@ class Opt : public QObject // to wrap any optional choice
     Q_OBJECT
     Q_PROPERTY(bool visible READ visible NOTIFY visibleChanged FINAL)
     Q_PROPERTY(bool enabled READ enabled NOTIFY enabledChanged FINAL)
-    Q_PROPERTY(bool checked READ checked NOTIFY checkedChanged FINAL)
+    Q_PROPERTY(bool checked READ checked WRITE setChecked NOTIFY checkedChanged FINAL)
     Q_PROPERTY(bool exclusive READ exclusive NOTIFY exclusiveChanged FINAL)
     Q_PROPERTY(QString label READ label NOTIFY labelChanged FINAL)
     Q_PROPERTY(QString tooltip READ tooltip NOTIFY tooltipChanged FINAL)
@@ -183,8 +184,8 @@ public:
     }
 
 protected:
-    QString m_label;
-    QString m_message;
+    QString m_label ="Title";
+    QString m_message = "description text";
     QString m_tooltip;
     QString m_icon;
     bool m_enabled = true;
@@ -217,15 +218,20 @@ public:
         {
             auto opt = m_opts[id];
 
-            if(m_exclusive)
-            {
-                uncheckAll();
-            }
+            cDebug() << "OPT checked state changed" << id << opt->label() << opt->checked();
 
             if(opt->checked())
             {
                 this->m_checkedOpt = opt;
             }
+
+            if(m_exclusive)
+            {
+                uncheckAll(id);
+            }
+
+            if(this->m_checkedOpt)
+                this->m_checkedOpt->setChecked(true);
 
            emit this->optToggled(id, opt->checked());
         });
@@ -247,12 +253,14 @@ public:
         uncheckAll();
     }
 
-    void uncheckAll()
+    void uncheckAll(const int &exception = -1)
     {
-        for(auto opt : m_opts)
+        for(const auto &optID : m_opts.keys())
         {
-            if(opt->exclusive())
-                opt->setChecked(false);
+            if(optID == exception)
+                continue;
+
+            m_opts[optID]->setChecked(false);
         }
     }
 
@@ -436,11 +444,12 @@ class Config : public QObject
 
     Q_PROPERTY( bool deviceEditable MEMBER m_deviceEditable NOTIFY deviceEditableChanged FINAL)
 
-    Q_PROPERTY( Opt *eraseOption MEMBER m_eraseOption NOTIFY eraseOptionChanged FINAL)
-    Q_PROPERTY( Opt *alongsideOption MEMBER m_alongsideOption NOTIFY alongsideOptionChanged FINAL)
-    Q_PROPERTY( Opt *replaceOption MEMBER m_replaceOption NOTIFY replaceOptionChanged FINAL)
-    Q_PROPERTY( Opt *somethingElseOption MEMBER m_somethingElseOption NOTIFY somethingElseOptionChanged FINAL)
+    Q_PROPERTY( Opt* eraseOption READ eraseOption NOTIFY eraseOptionChanged FINAL)
+    Q_PROPERTY( Opt* alongsideOption MEMBER m_alongsideOption NOTIFY alongsideOptionChanged FINAL)
+    Q_PROPERTY( Opt* replaceOption MEMBER m_replaceOption NOTIFY replaceOptionChanged FINAL)
+    Q_PROPERTY( Opt* somethingElseOption MEMBER m_somethingElseOption NOTIFY somethingElseOptionChanged FINAL)
     Q_PROPERTY( EncryptOpt *encryptOption MEMBER m_encryptOption NOTIFY encryptOptionChanged FINAL)
+    Q_PROPERTY( Opt *reuseHomeOption MEMBER m_reuseHomeOption NOTIFY reuseHomeOptionChanged FINAL)
     Q_PROPERTY( EfiOpt *efiOption MEMBER m_efiOption NOTIFY efiOptionChanged FINAL)
 
     Q_PROPERTY( bool efiAvailable MEMBER m_efiAvailable NOTIFY efiAvailableChanged FINAL)
@@ -475,6 +484,11 @@ public:
     void setInstallChoice(const InstallChoice &value);
     InstallChoice installChoice() const;
 
+
+    Opt* eraseOption() const
+    {
+        return m_eraseOption;
+    }
 
     /**
      * @brief applyActionChoice reacts to a choice of partitioning mode.
@@ -597,6 +611,7 @@ signals:
     void somethingElseOptionChanged();
     void encryptOptionChanged();
     void efiOptionChanged();
+    void reuseHomeOptionChanged();
 
     void efiAvailableChanged();
     void isEfiChanged();
