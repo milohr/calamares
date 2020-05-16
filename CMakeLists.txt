@@ -40,7 +40,7 @@
 
 cmake_minimum_required( VERSION 3.3 FATAL_ERROR )
 project( CALAMARES
-    VERSION 3.2.24
+    VERSION 3.2.25
     LANGUAGES C CXX )
 
 set( CALAMARES_VERSION_RC 1 )  # Set to 0 during release cycle, 1 during development
@@ -49,10 +49,15 @@ set( CALAMARES_VERSION_RC 1 )  # Set to 0 during release cycle, 1 during develop
 #
 option( INSTALL_CONFIG "Install configuration files" OFF )
 option( INSTALL_POLKIT "Install Polkit configuration" ON )
-option( BUILD_TESTING "Build the testing tree." ON )
-option( WITH_PYTHON "Enable Python modules API (requires Boost.Python)." ON )
-option( WITH_PYTHONQT "Enable next generation Python modules API (experimental, requires PythonQt)." OFF )
+option( INSTALL_COMPLETION "Install shell completions" OFF )
+# Options for the calamares executable
 option( WITH_KF5Crash "Enable crash reporting with KCrash." ON )
+option( WITH_KF5DBus "Use DBus service for unique-application." OFF )
+# When adding WITH_* that affects the ABI offered by libcalamares,
+# also update libcalamares/CalamaresConfig.h.in
+option( WITH_PYTHON "Enable Python modules API (requires Boost.Python)." ON )
+option( WITH_PYTHONQT "Enable Python view modules API (deprecated, requires PythonQt)." OFF )
+option( WITH_QML "Enable QML UI options." ON )
 
 # Possible debugging flags are:
 #  - DEBUG_TIMEZONES draws latitude and longitude lines on the timezone
@@ -157,6 +162,7 @@ if(NOT CMAKE_VERSION VERSION_LESS "3.10.0")
     )
 endif()
 
+include( CTest )
 
 ### C++ SETUP
 #
@@ -248,7 +254,10 @@ include( CMakeColors )
 
 ### DEPENDENCIES
 #
-find_package( Qt5 ${QT_VERSION} CONFIG REQUIRED Concurrent Core Gui Widgets LinguistTools Svg Quick QuickWidgets )
+find_package( Qt5 ${QT_VERSION} CONFIG REQUIRED Concurrent Core Gui LinguistTools Network Svg Widgets )
+if( WITH_QML )
+    find_package( Qt5 ${QT_VERSION} CONFIG REQUIRED Quick QuickWidgets )
+endif()
 if( Qt5_VERSION VERSION_GREATER 5.12.1 )
     # At least Qt 5.12.2 seems to support Esperanto in QLocale
     if( "eo" IN_LIST _tx_incomplete )
@@ -289,7 +298,7 @@ if( ECM_FOUND )
     include(KDEInstallDirs)
 endif()
 
-find_package( KF5 QUIET COMPONENTS CoreAddons Crash )
+find_package( KF5 QUIET COMPONENTS CoreAddons Crash DBusAddons )
 set_package_properties(
     KF5::CoreAddons PROPERTIES
     TYPE REQUIRED
@@ -298,12 +307,17 @@ set_package_properties(
     PURPOSE "About Calamares"
 )
 if( NOT KF5Crash_FOUND )
+    if( WITH_KF5Crash )
+        message(WARNING "WITH_KF5Crash is set, but KF5::Crash is not available.")
+    endif()
     set( WITH_KF5Crash OFF )
 endif()
-
-if( BUILD_TESTING )
-    enable_testing()
-endif ()
+if( NOT KF5DBusAddons_FOUND )
+    if( WITH_KF5DBus )
+        message(WARNING "WITH_KF5DBus is set, but KF5::DBusAddons is not available.")
+    endif()
+    set( WITH_KF5DBus OFF )
+endif()
 
 find_package( PythonLibs ${PYTHONLIBS_VERSION} )
 set_package_properties(
@@ -389,6 +403,13 @@ list( SORT CALAMARES_TRANSLATION_LANGUAGES )
 
 add_subdirectory( lang )  # i18n tools
 
+if ( INSTALL_COMPLETION )
+    if( NOT CMAKE_INSTALL_BASHCOMPLETIONDIR )
+        set( CMAKE_INSTALL_BASHCOMPLETIONDIR "${CMAKE_INSTALL_DATADIR}/bash-completion/completions" )
+    endif()
+
+    install( FILES ${CMAKE_SOURCE_DIR}/data/completion/bash/calamares DESTINATION "${CMAKE_INSTALL_BASHCOMPLETIONDIR}" )
+endif()
 
 ### Example Distro
 #
@@ -478,7 +499,11 @@ if ( CALAMARES_VERSION_RC EQUAL 0 )
 endif()
 
 # enforce using constBegin, constEnd for const-iterators
-add_definitions( "-DQT_STRICT_ITERATORS" )
+add_definitions(
+    -DQT_STRICT_ITERATORS
+    -DQT_SHARED
+    -DQT_SHAREDPOINTER_TRACK_POINTERS
+)
 
 # set paths
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}" )
@@ -512,6 +537,7 @@ add_feature_info(Python ${WITH_PYTHON} "Python job modules")
 add_feature_info(PythonQt ${WITH_PYTHONQT} "Python view modules")
 add_feature_info(Config ${INSTALL_CONFIG} "Install Calamares configuration")
 add_feature_info(KCrash ${WITH_KF5Crash} "Crash dumps via KCrash")
+add_feature_info(KDBusAddons ${WITH_KF5DBus} "Unique-application via DBus")
 
 # Add all targets to the build-tree export set
 set( CMAKE_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/Calamares" CACHE PATH  "Installation directory for CMake files" )

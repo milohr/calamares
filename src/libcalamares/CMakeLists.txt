@@ -1,12 +1,8 @@
 # libcalamares is the non-GUI part of Calamares, which includes handling
 # translations, configurations, logging, utilities, global storage, and (non-GUI) jobs.
 
-add_definitions(
-    ${QT_DEFINITIONS}
-    -DQT_SHARED
-    -DQT_SHAREDPOINTER_TRACK_POINTERS
-    -DDLLEXPORT_PRO
-)
+add_definitions( -DDLLEXPORT_PRO )
+include_directories( ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} )
 
 configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/CalamaresConfig.h.in
                 ${CMAKE_CURRENT_BINARY_DIR}/CalamaresConfig.h )
@@ -64,22 +60,6 @@ set( libSources
     utils/UMask.cpp
     utils/Variant.cpp
     utils/Yaml.cpp
-)
-set( _kdsagSources
-    kdsingleapplicationguard/kdsingleapplicationguard.cpp
-    kdsingleapplicationguard/kdsharedmemorylocker.cpp
-    kdsingleapplicationguard/kdtoolsglobal.cpp
-    kdsingleapplicationguard/kdlockedsharedmemorypointer.cpp
-)
-set( kdsagSources "" )
-foreach( _s ${_kdsagSources} )
-    list( APPEND kdsagSources ${CMAKE_SOURCE_DIR}/3rdparty/${_s} )
-endforeach()
-mark_thirdparty_code( ${kdsagSources} )
-
-include_directories(
-    ${CMAKE_CURRENT_BINARY_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 ### OPTIONAL Python support
@@ -156,7 +136,7 @@ endif()
 ### LIBRARY
 #
 #
-add_library( calamares SHARED ${libSources} ${kdsagSources} )
+add_library( calamares SHARED ${libSources} )
 set_target_properties( calamares
     PROPERTIES
         VERSION ${CALAMARES_VERSION_SHORT}
@@ -226,6 +206,16 @@ calamares_add_test(
         partition/Tests.cpp
 )
 
+if( KPMcore_FOUND )
+    calamares_add_test(
+        libcalamarespartitionkpmtest
+        SOURCES
+            partition/KPMTests.cpp
+        LIBRARIES
+            ${OPTIONAL_PRIVATE_LIBRARIES}
+    )
+endif()
+
 calamares_add_test(
     libcalamareslocaletest
     SOURCES
@@ -244,8 +234,8 @@ calamares_add_test(
         modulesystem/Tests.cpp
 )
 
-if( BUILD_TESTING )
-    add_executable( test_geoip geoip/test_geoip.cpp ${geoip_src} )
-    target_link_libraries( test_geoip calamares Qt5::Network yamlcpp )
-    calamares_automoc( test_geoip )
-endif()
+# This is not an actual test, it's a test / demo application
+# for experimenting with GeoIP.
+add_executable( test_geoip geoip/test_geoip.cpp ${geoip_src} )
+target_link_libraries( test_geoip calamares Qt5::Network yamlcpp )
+calamares_automoc( test_geoip )
