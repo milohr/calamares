@@ -102,72 +102,8 @@ WelcomeQmlViewStep::setConfigurationMap( const QVariantMap& configurationMap )
                       "module configuration.";
     }
 
-    return QString();
-}
-
-void
-WelcomeQmlViewStep::setConfigurationMap( const QVariantMap& configurationMap )
-{
-	using Calamares::Branding;
-    m_config->setSupportUrl( jobOrBrandingSetting( Branding::SupportUrl, configurationMap, "showSupportUrl" ) );
-    m_config->setKnownIssuesUrl( jobOrBrandingSetting( Branding::KnownIssuesUrl, configurationMap, "showKnownIssuesUrl" ) );
-    m_config->setReleaseNotesUrl( jobOrBrandingSetting( Branding::ReleaseNotesUrl, configurationMap, "showReleaseNotesUrl" ) );
-    m_config->setDonateUrl( CalamaresUtils::getString( configurationMap, "showDonateUrl" ) );
-
-	// TODO: expand Config class and set the remaining fields // with the configurationMap all those properties can be accessed without having to declare a property, get and setter for each
-
-	// TODO: figure out how the requirements (held by ModuleManager) should be accessible
-	//          to QML as a model. //will be model as a qvariantmap containing a alert level and the message string
-	if ( configurationMap.contains( "requirements" )
-		 && configurationMap.value( "requirements" ).type() == QVariant::Map )
-	{
-		m_requirementsChecker->setConfigurationMap( configurationMap.value( "requirements" ).toMap() );
-
-        m_config->requirementsModel().setRequirementsList( checkRequirements() );
-	}
-	else
-		cWarning() << "no valid requirements map found in welcome "
-					  "module configuration.";
-
-	bool ok = false;
-	QVariantMap geoip = CalamaresUtils::getSubMap( configurationMap, "geoip", ok );
-	if ( ok )
-	{
-		using FWString = QFutureWatcher< QString >;
-
-		auto* handler = new CalamaresUtils::GeoIP::Handler( CalamaresUtils::getString( geoip, "style" ),
-															CalamaresUtils::getString( geoip, "url" ),
-															CalamaresUtils::getString( geoip, "selector" ) );
-		if ( handler->type() != CalamaresUtils::GeoIP::Handler::Type::None )
-		{
-			auto* future = new FWString();
-			connect( future, &FWString::finished, [view = this, f = future, h = handler]() {
-				QString countryResult = f->future().result();
-				cDebug() << "GeoIP result for welcome=" << countryResult;
-				view->setCountry( countryResult, h );
-				f->deleteLater();
-				delete h;
-			} );
-			future->setFuture( handler->queryRaw() );
-		}
-		else
-		{
-			// Would not produce useful country code anyway.
-			delete handler;
-		}
-	}
-
-	QString language = CalamaresUtils::getString( configurationMap, "languageIcon" );
-	if ( !language.isEmpty() )
-	{
-		auto icon = Calamares::Branding::instance()->image( language, QSize( 48, 48 ) );
-		if ( !icon.isNull() )
-		{
-			m_config->setLanguageIcon(language);
-		}
-	}
-
-    Calamares::QmlViewStep::setConfigurationMap( configurationMap ); // call parent implementation last
+    Calamares::QmlViewStep::setConfigurationMap( configurationMap );  // call parent implementation last
+    setContextProperty( "Welcome", m_config );
 }
 
 Calamares::RequirementsList

@@ -856,7 +856,7 @@ Config::doReplaceSelectedPartition( const QModelIndex& current )
             if ( !homePartitionPath->isEmpty() )
                 m_reuseHomeOption->setLabel( tr( "Reuse %1 as home partition for %2." )
                 .arg( *homePartitionPath )
-                .arg( *Calamares::Branding::ShortProductName ) );
+                .arg( Calamares::Branding::ShortProductName ) );
             delete homePartitionPath;
 
             if ( m_isEfi )
@@ -1155,7 +1155,7 @@ Config::setupEfiSystemPartitionSelector()
             tr( "An EFI system partition cannot be found anywhere "
             "on this system. Please go back and use manual "
             "partitioning to set up %1." )
-            .arg( *Calamares::Branding::ShortProductName ) );
+            .arg( Calamares::Branding::ShortProductName ) );
         updateNextEnabled();
     }
     else if ( efiSystemPartitions.count() == 1 ) //probably most usual situation
@@ -1164,7 +1164,7 @@ Config::setupEfiSystemPartitionSelector()
             tr( "The EFI system partition at %1 will be used for "
             "starting %2." )
             .arg( efiSystemPartitions.first()->partitionPath() )
-            .arg( *Calamares::Branding::ShortProductName ) );
+            .arg( Calamares::Branding::ShortProductName ) );
     }
     else
     {
@@ -1276,10 +1276,10 @@ Config::setupActions()
             "currently present on the selected storage device."));
 
             m_alongsideOption->setMessage( tr( "The installer will shrink a partition to make room for %1." )
-            .arg( *Calamares::Branding::ShortVersionedName ) );
+            .arg( Calamares::Branding::ShortVersionedName ) );
 
             m_replaceOption->setMessage( tr( "Replaces a partition with %1." )
-            .arg( *Calamares::Branding::ShortVersionedName ) );
+            .arg( Calamares::Branding::ShortVersionedName ) );
         )
 
         m_replaceOption->hide();
@@ -1305,13 +1305,13 @@ Config::setupActions()
                 emit prettyStatusChanged();
 
                 m_alongsideOption->setMessage( tr( "The installer will shrink a partition to make room for %1." )
-                .arg( *Calamares::Branding::ShortVersionedName ) );
+                .arg( Calamares::Branding::ShortVersionedName ) );
 
                 m_eraseOption->setMessage( tr( "This will <font color=\"red\">delete</font> all data "
                 "currently present on the selected storage device." ) );
 
                 m_replaceOption->setMessage( tr( "Replaces a partition with %1." )
-                .arg( *Calamares::Branding::ShortVersionedName ) );
+                .arg( Calamares::Branding::ShortVersionedName ) );
             )
         }
         else
@@ -1324,13 +1324,13 @@ Config::setupActions()
                 "before any change is made to the storage device." ) );
 
                 m_alongsideOption->setMessage( tr( "The installer will shrink a partition to make room for %1." )
-                .arg( *Calamares::Branding::ShortVersionedName ) );
+                .arg( Calamares::Branding::ShortVersionedName ) );
 
                 m_eraseOption->setMessage( tr( "This will <font color=\"red\">delete</font> all data "
                 "currently present on the selected storage device." ) );
 
                 m_replaceOption->setMessage( tr( "Replaces a partition with %1." )
-                .arg( *Calamares::Branding::ShortVersionedName ) );
+                .arg( Calamares::Branding::ShortVersionedName ) );
 
                 emit prettyStatusChanged();
             )
@@ -1350,13 +1350,13 @@ Config::setupActions()
             emit prettyStatusChanged();
 
             m_alongsideOption->setMessage( tr( "The installer will shrink a partition to make room for %1." )
-            .arg( *Calamares::Branding::ShortVersionedName ) );
+            .arg( Calamares::Branding::ShortVersionedName ) );
 
             m_eraseOption->setMessage( tr( "This will <font color=\"red\">delete</font> all data "
             "currently present on the selected storage device." ) );
 
             m_replaceOption->setMessage( tr( "Replaces a partition with %1." )
-            .arg( *Calamares::Branding::ShortVersionedName ) );
+            .arg( Calamares::Branding::ShortVersionedName ) );
         )
     }
 
