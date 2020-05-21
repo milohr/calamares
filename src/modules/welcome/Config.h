@@ -33,18 +33,18 @@ class Config : public QObject
 
     Q_PROPERTY( QString languageIcon READ languageIcon CONSTANT FINAL )
 
-    Q_PROPERTY( QString countryCode MEMBER m_countryCode NOTIFY countryCodeChanged FINAL )
+    Q_PROPERTY( QString countryCode MEMBER m_countryCode NOTIFY countryCodeChanged CONSTANT )
     Q_PROPERTY( int localeIndex READ localeIndex WRITE setLocaleIndex NOTIFY localeIndexChanged )
 
-    Q_PROPERTY( QString genericWelcomeMessage MEMBER m_genericWelcomeMessage NOTIFY genericWelcomeMessageChanged FINAL )
-    Q_PROPERTY( QString warningMessage READ warningMessage NOTIFY warningMessageChanged FINAL )
+    Q_PROPERTY( QString genericWelcomeMessage MEMBER m_genericWelcomeMessage NOTIFY genericWelcomeMessageChanged CONSTANT )
+    Q_PROPERTY( QString warningMessage READ warningMessage NOTIFY warningMessageChanged CONSTANT )
 
-    Q_PROPERTY( QString supportUrl MEMBER m_supportUrl NOTIFY supportUrlChanged FINAL )
-    Q_PROPERTY( QString knownIssuesUrl MEMBER m_knownIssuesUrl NOTIFY knownIssuesUrlChanged FINAL )
-    Q_PROPERTY( QString releaseNotesUrl MEMBER m_releaseNotesUrl NOTIFY releaseNotesUrlChanged FINAL )
-    Q_PROPERTY( QString donateUrl MEMBER m_donateUrl NOTIFY donateUrlChanged FINAL )
+    Q_PROPERTY( QString supportUrl MEMBER m_supportUrl NOTIFY supportUrlChanged CONSTANT )
+    Q_PROPERTY( QString knownIssuesUrl MEMBER m_knownIssuesUrl NOTIFY knownIssuesUrlChanged CONSTANT )
+    Q_PROPERTY( QString releaseNotesUrl MEMBER m_releaseNotesUrl NOTIFY releaseNotesUrlChanged CONSTANT )
+    Q_PROPERTY( QString donateUrl MEMBER m_donateUrl NOTIFY donateUrlChanged CONSTANT )
 
-    Q_PROPERTY( bool isNextEnabled MEMBER m_isNextEnabled NOTIFY isNextEnabledChanged FINAL )
+    Q_PROPERTY( bool isNextEnabled MEMBER m_isNextEnabled NOTIFY isNextEnabledChanged CONSTANT )
 
 public:
     Config( QObject* parent = nullptr );

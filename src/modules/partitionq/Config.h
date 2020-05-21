@@ -216,13 +216,22 @@ public:
         m_opts.insert(id, opt);
         connect(opt, &Opt::checkedChanged, [this, id]()
         {
-            auto opt = m_opts[id];
+            const auto opt = m_opts[id];
+
 
             cDebug() << "OPT checked state changed" << id << opt->label() << opt->checked();
 
             if(opt->checked())
             {
                 this->m_checkedOpt = opt;
+            }else
+            {
+                if(m_checkedOpt == opt)
+                {
+                    cDebug() << "current checked option has been unccheked";
+                    m_checkedOpt = nullptr;
+                }
+                return;
             }
 
             if(m_exclusive)
@@ -230,8 +239,8 @@ public:
                 uncheckAll(id);
             }
 
-            if(this->m_checkedOpt)
-                this->m_checkedOpt->setChecked(true);
+//             if(this->m_checkedOpt)
+//                 this->m_checkedOpt->setChecked(true);
 
            emit this->optToggled(id, opt->checked());
         });

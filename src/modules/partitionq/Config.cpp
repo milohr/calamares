@@ -183,7 +183,7 @@ Config::Config(QObject* parent )
 , m_lastSelectedDeviceIndex( -1 )
 // , m_availableSwapChoices( swapChoices )
 // , m_eraseSwapChoice( pickOne( swapChoices ) )
-, m_allowManualPartitioning( true )
+, m_allowManualPartitioning( true ) //TODO for now since it has nto qml support
 {
 // //     setupUi( this );
 
@@ -191,7 +191,7 @@ Config::Config(QObject* parent )
 
     m_defaultFsType = gs->value( "defaultFileSystemType" ).toString();
 //     m_encryptOption->setEnabled (gs->value( "enableLuksAutomatedPartitioning" ).toBool());
-    m_allowManualPartitioning = gs->value( "allowManualPartitioning" ).toBool();
+//     m_allowManualPartitioning = gs->value( "allowManualPartitioning" ).toBool();
 
     if ( FileSystem::typeForName( m_defaultFsType ) == FileSystem::Unknown )
         m_defaultFsType = "ext4";
@@ -332,6 +332,8 @@ Config::setupChoices()
     connect( m_grp, &OptGroup::optToggled,
              this, [ this ]( int id, bool checked )
              {
+                 cDebug()<< "Install oiption selected" << static_cast< InstallChoice >( id ) << checked;
+
                  if ( checked )  // An action was picked.
                  {
                      setInstallChoice(static_cast< InstallChoice >( id ));

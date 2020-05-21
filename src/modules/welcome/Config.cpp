@@ -34,15 +34,14 @@ Config::Config( QObject* parent )
     , m_languages( CalamaresUtils::Locale::availableTranslations() )
 {
     initLanguages();
-
+    m_genericWelcomeMessage = genericWelcomeMessage().arg( Calamares::Branding::instance()->versionedName() );
+    emit genericWelcomeMessageChanged( m_genericWelcomeMessage );
     CALAMARES_RETRANSLATE_SLOT( &Config::retranslate )
 }
 
 void
 Config::retranslate()
 {
-    m_genericWelcomeMessage = genericWelcomeMessage().arg( Calamares::Branding::instance()->versionedName() );
-    emit genericWelcomeMessageChanged( m_genericWelcomeMessage );
 
     const auto* r = requirementsModel();
     if ( !r->satisfiedRequirements() )
@@ -229,14 +228,14 @@ Config::genericWelcomeMessage() const
     if ( Calamares::Settings::instance()->isSetupMode() )
     {
         message = Calamares::Branding::instance()->welcomeStyleCalamares()
-            ? tr( "<h1>Welcome to the Calamares setup program for %1.</h1>" )
-            : tr( "<h1>Welcome to %1 setup.</h1>" );
+            ? tr( "Welcome to the Calamares setup program for %1." )
+            : tr( "Welcome to %1 setup." );
     }
     else
     {
         message = Calamares::Branding::instance()->welcomeStyleCalamares()
-            ? tr( "<h1>Welcome to the Calamares installer for %1.</h1>" )
-            : tr( "<h1>Welcome to the %1 installer.</h1>" );
+            ? tr( "Welcome to the Calamares installer for %1." )
+            : tr( "Welcome to the %1 installer." );
     }
 
     return message;
