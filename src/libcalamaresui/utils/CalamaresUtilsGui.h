@@ -87,6 +87,9 @@ UIDLLEXPORT QPixmap defaultPixmap( ImageType type,
                                    ImageMode mode = CalamaresUtils::Original,
                                    const QSize& size = QSize( 0, 0 ) );
 
+UIDLLEXPORT QString defaultPixmapUrl( ImageType type,
+                                   ImageMode mode = CalamaresUtils::Original );
+
 /**
  * @brief createRoundedImage returns a rounded version of a pixmap.
  * @param avatar the input pixmap.

@@ -181,7 +181,6 @@ Config::Config(QObject* parent )
 , m_reuseHomeOption ( new Opt(this) )
 , m_efiOption ( new EfiOpt (this) )
 , m_lastSelectedDeviceIndex( -1 )
-// , m_availableSwapChoices( swapChoices )
 // , m_eraseSwapChoice( pickOne( swapChoices ) )
 , m_allowManualPartitioning( true ) //TODO for now since it has nto qml support
 {
@@ -190,8 +189,8 @@ Config::Config(QObject* parent )
     auto gs = Calamares::JobQueue::instance()->globalStorage();
 
     m_defaultFsType = gs->value( "defaultFileSystemType" ).toString();
-//     m_encryptOption->setEnabled (gs->value( "enableLuksAutomatedPartitioning" ).toBool());
-//     m_allowManualPartitioning = gs->value( "allowManualPartitioning" ).toBool();
+    m_encryptOption->setEnabled (gs->value( "enableLuksAutomatedPartitioning" ).toBool());
+    m_allowManualPartitioning = gs->value( "allowManualPartitioning" ).toBool();
 
     if ( FileSystem::typeForName( m_defaultFsType ) == FileSystem::Unknown )
         m_defaultFsType = "ext4";
@@ -216,8 +215,9 @@ Config::Config(QObject* parent )
     m_somethingElseOption->setLabel( tr( "<strong>Manual partitioning</strong>" ) );
     m_encryptOption->setLabel(tr("Encrypt system"));
     m_reuseHomeOption->setLabel( tr ("Reuse Home" ));
-//     m_encryptOption->hide();
-//     m_reuseHomeOption->hide();
+
+    m_encryptOption->hide();
+    m_reuseHomeOption->hide();
 
     gs->insert( "reuseHome", false );
 }
@@ -303,29 +303,30 @@ Config::setupChoices()
     //  TBD: upgrade option?
 
 
-//     m_alongsideOption->setIcon(CalamaresUtils::defaultPixmapUrl( CalamaresUtils::PartitionAlongside, CalamaresUtils::Original));
+    m_alongsideOption->setIcon(CalamaresUtils::defaultPixmapUrl( CalamaresUtils::PartitionAlongside, CalamaresUtils::Original));
     m_grp->addOpt( m_alongsideOption, Alongside );
 
 
-//     m_eraseOption->setIcon(CalamaresUtils::defaultPixmapUrl( CalamaresUtils::PartitionEraseAuto, CalamaresUtils::Original));
+    m_eraseOption->setIcon(CalamaresUtils::defaultPixmapUrl( CalamaresUtils::PartitionEraseAuto, CalamaresUtils::Original));
     m_grp->addOpt( m_eraseOption, Erase );
 
 
-//     m_replaceOption->setIcon(CalamaresUtils::defaultPixmapUrl( CalamaresUtils::PartitionReplaceOs, CalamaresUtils::Original));
+    m_replaceOption->setIcon(CalamaresUtils::defaultPixmapUrl( CalamaresUtils::PartitionReplaceOs, CalamaresUtils::Original));
     m_grp->addOpt( m_replaceOption, Replace );
 
 
-//     m_somethingElseOption->setIcon(CalamaresUtils::defaultPixmapUrl( CalamaresUtils::PartitionManual, CalamaresUtils::Original));
+    m_somethingElseOption->setIcon(CalamaresUtils::defaultPixmapUrl( CalamaresUtils::PartitionManual, CalamaresUtils::Original));
     m_grp->addOpt( m_somethingElseOption, Manual );
 
 
     // Fill up swap options
     // .. TODO: only if enabled in the config
-//     if ( m_availableSwapChoices.count() > 1 )
-//     {
+    if ( m_availableSwapChoices.count() > 1 )
+    {
+
 //         m_eraseSwapChoiceComboBox = createCombo( m_availableSwapChoices, m_eraseSwapChoice );
-//         m_eraseButton->addOptionsComboBox( m_eraseSwapChoiceComboBox );
-//     } //TODO same issue deciding if it is a model or what up
+//         m_eraseOption->addOptions( m_eraseSwapChoiceComboBox );
+    } //TODO same issue deciding if it is a model or what up
 
 
 //
@@ -1501,6 +1502,11 @@ Config::bootloaderModel() const
     return m_bootloaderModel;
 }
 
+SwapChoiceSet
+Config::availableSwapChoices() const
+{
+    return m_availableSwapChoices;
+}
 
 Config::InstallChoice Config::installChoice() const
 {

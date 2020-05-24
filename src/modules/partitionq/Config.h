@@ -448,6 +448,7 @@ class Config : public QObject
     Q_OBJECT
     Q_PROPERTY( DeviceModel* devices READ devicesModel NOTIFY devicesModelChanged FINAL )
     Q_PROPERTY( BootLoaderModel* bootloaders READ bootloaderModel NOTIFY bootloaderModelChanged FINAL )
+    Q_PROPERTY( SwapChoiceSet availableSwapChoices READ availableSwapChoices NOTIFY availableSwapChoicesChanged FINAL)
     Q_PROPERTY( QString prettyStatus READ prettyStatus NOTIFY prettyStatusChanged FINAL )
     Q_PROPERTY( InstallChoice installChoice READ installChoice WRITE setInstallChoice NOTIFY installChoiceChanged)
 
@@ -492,7 +493,6 @@ public:
 
     void setInstallChoice(const InstallChoice &value);
     InstallChoice installChoice() const;
-
 
     Opt* eraseOption() const
     {
@@ -601,6 +601,7 @@ private slots:
 protected:
     DeviceModel* devicesModel() const;
     BootLoaderModel* bootloaderModel() const;
+    SwapChoiceSet availableSwapChoices() const;
 
 signals:
     void nextStatusChanged( bool );
@@ -610,6 +611,7 @@ signals:
     void prettyStatusChanged();
     void devicesModelChanged();
     void bootloaderModelChanged();
+    void availableSwapChoicesChanged();
     void installChoiceChanged();
 
     void deviceEditableChanged();
