@@ -59,6 +59,8 @@ Config::Config(QObject *parent) : QObject(parent)
 , m_thisViewStep(static_cast<SummaryQmlViewStep*>(parent))
 , m_summary( new SummaryModel(this) )
 {
+    m_title = m_thisViewStep->prettyName();
+
     if ( Calamares::Settings::instance()->isSetupMode() )
         m_message =( tr( "This is an overview of what will happen once you start "
         "the setup procedure." ) );

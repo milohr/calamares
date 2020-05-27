@@ -1,3 +1,4 @@
+
 /* === This file is part of Calamares - <https://github.com/calamares> ===
  *
  *   Copyright 2019-2020, Adriaan de Groot <groot@kde.org>

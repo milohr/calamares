@@ -335,7 +335,8 @@ PartitionQmlViewStep::isNextEnabled() const
 //         return m_core->hasRootMountPoint();
 //     }
 
-    return false;
+//     return false;
+    return true;
 }
 
 
