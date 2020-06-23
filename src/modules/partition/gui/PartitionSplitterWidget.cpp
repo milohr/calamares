@@ -34,6 +34,7 @@
 #include <QPainter>
 #include <QMouseEvent>
 #include <QStyleOption>
+#include <QPainterPath>
 
 using CalamaresUtils::Partition::PartitionIterator;
 
