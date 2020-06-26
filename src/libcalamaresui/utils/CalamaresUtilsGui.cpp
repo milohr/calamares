@@ -300,6 +300,10 @@ unmarginLayout( QLayout* layout )
 int
 defaultFontSize()
 {
+    if ( s_defaultFontSize <= 0 )
+    {
+        s_defaultFontSize = QFont().pointSize();
+    }
     return s_defaultFontSize;
 }
 

@@ -54,6 +54,7 @@ bool
 WelcomeQmlViewStep::isNextEnabled() const
 {
     return m_config->requirementsModel()->satisfiedMandatory();
+//     return true;
 }
 
 bool

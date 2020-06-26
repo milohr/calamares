@@ -99,22 +99,30 @@ UsersQmlViewStep::jobs() const
     return m_jobs;
 }
 
-
 void
 UsersQmlViewStep::onActivate()
 {
     m_config->onActivate();
 }
 
-
 void
 UsersQmlViewStep::onLeave()
 {
     m_jobs.clear();
-
     m_jobs.append( m_config->createJobs( m_defaultGroups ) );
-}
 
+    Calamares::Job* j;
+
+    auto userPW = m_config->getUserPassword();
+    j = new SetPasswordJob( userPW.first, userPW.second );
+    m_jobs.append( Calamares::job_ptr( j ) );
+
+    j = new SetPasswordJob( "root", m_config->getRootPassword() );
+    m_jobs.append( Calamares::job_ptr( j ) );
+
+    j = new SetHostNameJob( m_config->getHostname(), m_actions );
+    m_jobs.append( Calamares::job_ptr( j ) );
+}
 
 void
 UsersQmlViewStep::setConfigurationMap( const QVariantMap& configurationMap )

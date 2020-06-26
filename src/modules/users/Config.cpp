@@ -490,5 +490,36 @@ Config::addPasswordCheck( const QString& key, const QVariant& value )
     }
 }
 
+QString
+Config::getHostname() const
+{
+    return m_hostName;
+}
+
+QString
+Config::getRootPassword() const
+{
+    if ( m_writeRootPassword )
+    {
+        if ( m_reusePassword )
+        {
+            return m_userPassword;
+        }
+        else
+        {
+            return m_rootPassword;
+        }
+    }
+    else
+    {
+        return QString();
+    }
+}
+
+QPair< QString, QString >
+Config::getUserPassword() const
+{
+    return QPair< QString, QString >( m_userName, m_userPassword );
+}
 
 

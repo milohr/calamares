@@ -29,13 +29,13 @@ Rectangle {
     focus: true
     Kirigami.Theme.backgroundColor: Kirigami.Theme.backgroundColor
     anchors.fill: parent
-    anchors.topMargin: 70
+    anchors.topMargin: 50
 
     TextArea {
         id: required
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
-        anchors.topMargin: 10
+        anchors.topMargin: 1
         horizontalAlignment: TextEdit.AlignHCenter
         width: 640
         font.pointSize: 11
@@ -44,13 +44,17 @@ Rectangle {
         activeFocusOnPress: false
         wrapMode: Text.WordWrap
 
-        text: qsTr("<p>This computer does not satisfy the minimum requirements for installing %1.<br/>
+        property var requirementsText: qsTr("<p>This computer does not satisfy the minimum requirements for installing %1.<br/>
         Installation cannot continue.</p>").arg(Branding.string(Branding.VersionedName))
+        property var recommendationsText: qsTr("<p>This computer does not satisfy some of the recommended requirements for setting up %1.<br/>
+        Setup can continue, but some features might be disabled.</p>").arg(Branding.string(Branding.VersionedName))
+
+        text: config.requirementsModel.satisfiedMandatory ? recommendationsText : requirementsText
     }
 
     Rectangle {
         width: 640
-        height: 400
+        height: 360
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: required.bottom
         anchors.topMargin: 5
@@ -60,26 +64,31 @@ Rectangle {
 
             Item {
                 width: 640
-                height: 40
+                height: 35
+                visible: true
 
                 Column {
                     anchors.centerIn: parent
 
                     Rectangle {
                         implicitWidth: 640
-                        implicitHeight: 40
-                        border.color: mandatory ? "#228b22" : "#ff0000"
-                        color: mandatory ? "#f0fff0" : "#ffc0cb"
+                        implicitHeight: 35
+                        // Colors and images based on the two satisfied-bools:
+                        // - if satisfied, then green / ok
+                        // - otherwise if mandatory, then red / stop
+                        // - otherwise, then yellow / warning
+                        border.color: satisfied ? "#228b22" : (mandatory ? "#ff0000" : "#ffa411")
+                        color: satisfied ? "#f0fff0" : (mandatory ? "#ffc0cb" : "#ffefd5")
 
                         Image {
                             anchors.verticalCenter: parent.verticalCenter
                             anchors.right: parent.right
                             anchors.margins: 20
-                            source: mandatory ? "qrc:/data/images/yes.svgz" : "qrc:/data/images/no.svgz"
+                            source: satisfied ? "qrc:/data/images/yes.svgz" : (mandatory ? "qrc:/data/images/no.svgz" : "qrc:/data/images/information.svgz")
                         }
 
                         Text {
-                            text: mandatory ? details : negatedText
+                            text: satisfied ? details : negatedText
                             anchors.centerIn: parent
                             font.pointSize: 11
                         }
@@ -89,9 +98,13 @@ Rectangle {
         }
 
         ListView {
+            id: requirementsList
             anchors.fill: parent
             spacing: 5
-            model: config.requirementsModel
+            // This uses the filtered model, so that only unsatisfied
+            // requirements are ever shown. You could use *requirementsModel*
+            // to get all of them.
+            model: config.unsatisfiedRequirements
             delegate: requirementsDelegate
         }
     }
