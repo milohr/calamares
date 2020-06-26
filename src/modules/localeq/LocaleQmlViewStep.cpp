@@ -95,6 +95,12 @@ LocaleQmlViewStep::prettyName() const
     return tr( "Location" );
 }
 
+QString
+LocaleQmlViewStep::prettyStatus() const
+{
+    return m_prettyStatus;
+}
+
 bool
 LocaleQmlViewStep::isNextEnabled() const
 {
@@ -141,7 +147,7 @@ void LocaleQmlViewStep::onLeave()
     if ( true )
     {
         m_jobs = m_config->createJobs();
-//         m_prettyStatus = m_actualWidget->prettyStatus();
+        m_prettyStatus = m_config->prettyStatus();
 
         auto map = m_config->localesMap();
         QVariantMap vm;

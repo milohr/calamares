@@ -130,133 +130,78 @@ PartitionQmlViewStep::prettyName() const
     return tr( "Partitions" );
 }
 
-/*
-QWidget*
-PartitionQmlViewStep::createSummaryWidget() const //TODO we need a sumary model
+QString PartitionQmlViewStep::prettyStatus() const
 {
-    QWidget* widget = new QWidget;
-    QVBoxLayout* mainLayout = new QVBoxLayout;
-    widget->setLayout( mainLayout );
-    mainLayout->setMargin( 0 );
+    QString jobsLabel, modeText, diskInfoLabel;
 
-    ChoicePage::InstallChoice choice = m_choicePage->currentChoice();
-
-    QFormLayout* formLayout = new QFormLayout( widget );
-    const int MARGIN = CalamaresUtils::defaultFontHeight() / 2;
-    formLayout->setContentsMargins( MARGIN, 0, MARGIN, MARGIN );
-    mainLayout->addLayout( formLayout );
+    Config::InstallChoice choice = m_config->installChoice();
+    const auto* branding = Calamares::Branding::instance();
 
     QList< PartitionCoreModule::SummaryInfo > list = m_core->createSummaryInfo();
+
+    cDebug() << "Summary for Partition" << list.length() << choice;
     if ( list.length() > 1 )  // There are changes on more than one disk
     {
-        NOTE: all of this should only happen when Manual partitioning is active.
-             Any other choice should result in a list.length() == 1.
-        QLabel* modeLabel = new QLabel;
-        formLayout->addRow( modeLabel );
-        QString modeText;
+//         NOTE: all of this should only happen when Manual partitioning is active.
+//         Any other choice should result in a list.length() == 1.
         switch ( choice )
         {
-            case ChoicePage::Alongside:
+            case Config::Alongside:
                 modeText = tr( "Install %1 <strong>alongside</strong> another operating system." )
-                .arg( *Calamares::Branding::ShortVersionedName );
+                .arg( branding->shortVersionedName() );
                 break;
-            case ChoicePage::Erase:
+            case Config::Erase:
                 modeText
-                = tr( "<strong>Erase</strong> disk and install %1." ).arg( *Calamares::Branding::ShortVersionedName );
+                = tr( "<strong>Erase</strong> disk and install %1." ).arg( branding->shortVersionedName() );
                 break;
-            case ChoicePage::Replace:
+            case Config::Replace:
                 modeText
-                = tr( "<strong>Replace</strong> a partition with %1." ).arg( *Calamares::Branding::ShortVersionedName );
+                = tr( "<strong>Replace</strong> a partition with %1." ).arg( branding->shortVersionedName() );
                 break;
-            case ChoicePage::NoChoice:
-            case ChoicePage::Manual:
+            case Config::NoChoice:
+            case Config::Manual:
                 modeText = tr( "<strong>Manual</strong> partitioning." );
         }
-        modeLabel->setText( modeText );
     }
+
     for ( const auto& info : list )
     {
-        QLabel* diskInfoLabel = new QLabel;
         if ( list.length() == 1 )  // this is the only disk preview
         {
-            QString modeText;
             switch ( choice )
             {
-                case ChoicePage::Alongside:
-                    modeText = tr( "Install %1 <strong>alongside</strong> another operating system on disk "
+                case Config::Alongside:
+                    diskInfoLabel = tr( "Install %1 <strong>alongside</strong> another operating system on disk "
                     "<strong>%2</strong> (%3)." )
-                    .arg( *Calamares::Branding::ShortVersionedName )
+                    .arg( branding->shortVersionedName() )
                     .arg( info.deviceNode )
                     .arg( info.deviceName );
                     break;
-                case ChoicePage::Erase:
-                    modeText = tr( "<strong>Erase</strong> disk <strong>%2</strong> (%3) and install %1." )
-                    .arg( *Calamares::Branding::ShortVersionedName )
+                case Config::Erase:
+                    diskInfoLabel = tr( "<strong>Erase</strong> disk <strong>%2</strong> (%3) and install %1." )
+                    .arg( branding->shortVersionedName() )
                     .arg( info.deviceNode )
                     .arg( info.deviceName );
                     break;
-                case ChoicePage::Replace:
-                    modeText = tr( "<strong>Replace</strong> a partition on disk <strong>%2</strong> (%3) with %1." )
-                    .arg( *Calamares::Branding::ShortVersionedName )
+                case Config::Replace:
+                    diskInfoLabel = tr( "<strong>Replace</strong> a partition on disk <strong>%2</strong> (%3) with %1." )
+                    .arg( branding->shortVersionedName() )
                     .arg( info.deviceNode )
                     .arg( info.deviceName );
                     break;
-                case ChoicePage::NoChoice:
-                case ChoicePage::Manual:
-                    modeText = tr( "<strong>Manual</strong> partitioning on disk <strong>%1</strong> (%2)." )
+                case Config::NoChoice:
+                case Config::Manual:
+                    diskInfoLabel = tr( "<strong>Manual</strong> partitioning on disk <strong>%1</strong> (%2)." )
                     .arg( info.deviceNode )
                     .arg( info.deviceName );
             }
-            diskInfoLabel->setText( modeText );
         }
         else  // multiple disk previews!
         {
-            diskInfoLabel->setText(
-                tr( "Disk <strong>%1</strong> (%2)" ).arg( info.deviceNode ).arg( info.deviceName ) );
+            diskInfoLabel =  tr( "Disk <strong>%1</strong> (%2)" ).arg( info.deviceNode ).arg( info.deviceName ) ;
         }
-        formLayout->addRow( diskInfoLabel );
-
-        PartitionBarsView* preview;
-        PartitionLabelsView* previewLabels;
-        QVBoxLayout* field;
-
-        PartitionBarsView::NestedPartitionsMode mode
-        = Calamares::JobQueue::instance()->globalStorage()->value( "drawNestedPartitions" ).toBool()
-        ? PartitionBarsView::DrawNestedPartitions
-        : PartitionBarsView::NoNestedPartitions;
-        preview = new PartitionBarsView;
-        preview->setNestedPartitionsMode( mode );
-        previewLabels = new PartitionLabelsView;
-        previewLabels->setExtendedPartitionHidden( mode == PartitionBarsView::NoNestedPartitions );
-        preview->setModel( info.partitionModelBefore );
-        previewLabels->setModel( info.partitionModelBefore );
-        preview->setSelectionMode( QAbstractItemView::NoSelection );
-        previewLabels->setSelectionMode( QAbstractItemView::NoSelection );
-        info.partitionModelBefore->setParent( widget );
-        field = new QVBoxLayout;
-        CalamaresUtils::unmarginLayout( field );
-        field->setSpacing( 6 );
-        field->addWidget( preview );
-        field->addWidget( previewLabels );
-        formLayout->addRow( tr( "Current:" ), field );
-
-        preview = new PartitionBarsView;
-        preview->setNestedPartitionsMode( mode );
-        previewLabels = new PartitionLabelsView;
-        previewLabels->setExtendedPartitionHidden( mode == PartitionBarsView::NoNestedPartitions );
-        preview->setModel( info.partitionModelAfter );
-        previewLabels->setModel( info.partitionModelAfter );
-        preview->setSelectionMode( QAbstractItemView::NoSelection );
-        previewLabels->setSelectionMode( QAbstractItemView::NoSelection );
-        previewLabels->setCustomNewRootLabel( *Calamares::Branding::BootloaderEntryName );
-        info.partitionModelAfter->setParent( widget );
-        field = new QVBoxLayout;
-        CalamaresUtils::unmarginLayout( field );
-        field->setSpacing( 6 );
-        field->addWidget( preview );
-        field->addWidget( previewLabels );
-        formLayout->addRow( tr( "After:" ), field );
     }
+
     QStringList jobsLines;
     foreach ( const Calamares::job_ptr& job, jobs() )
     {
@@ -267,18 +212,11 @@ PartitionQmlViewStep::createSummaryWidget() const //TODO we need a sumary model
     }
     if ( !jobsLines.isEmpty() )
     {
-        QLabel* jobsLabel = new QLabel( widget );
-        mainLayout->addWidget( jobsLabel );
-        jobsLabel->setText( jobsLines.join( "<br/>" ) );
-        jobsLabel->setMargin( CalamaresUtils::defaultFontHeight() / 2 );
-        QPalette pal;
-        pal.setColor( QPalette::Background, pal.window().color().lighter( 108 ) );
-        jobsLabel->setAutoFillBackground( true );
-        jobsLabel->setPalette( pal );
+        jobsLabel = jobsLines.join( "<br/>" );
     }
-    return widget;
-}*/
 
+    return diskInfoLabel + "<br/>" + jobsLabel;
+}
 
 void
 PartitionQmlViewStep::next()
@@ -400,7 +338,7 @@ PartitionQmlViewStep::onLeave()
 {
 //     if ( m_widget->currentWidget() == m_choicePage )
 //     {
-//         m_choicePage->onLeave();
+        m_config->onLeave();
 //         return;
 //     }
 //

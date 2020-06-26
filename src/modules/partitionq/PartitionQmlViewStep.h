@@ -49,7 +49,8 @@ public:
     virtual ~PartitionQmlViewStep() override;
 
     QString prettyName() const override;
-//     QWidget* createSummaryWidget() const override;
+    QString prettyStatus() const override;
+    //     QWidget* createSummaryWidget() const override;
 
     void next() override;
     void back() override;

@@ -16,7 +16,7 @@ SummaryModel::SummaryModel(QObject* parent) : QAbstractListModel(parent)
 
 QHash<int, QByteArray> SummaryModel::roleNames() const
 {
-    return { { Qt::DisplayRole, "label" }, { Qt::UserRole, "message" } };
+    return { { Qt::DisplayRole, "title" }, { Qt::UserRole, "message" } };
 }
 
 QVariant SummaryModel::data(const QModelIndex& index, int role) const
